@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
-import Button from "@/components/atoms/Button";
-import Input from "@/components/atoms/Input";
-import Select from "@/components/atoms/Select";
-import Badge from "@/components/atoms/Badge";
 import BugTable from "@/components/organisms/BugTable";
 import BugCreateModal from "@/components/organisms/BugCreateModal";
 import BugDetailModal from "@/components/organisms/BugDetailModal";
-import { toast } from 'react-toastify';
+import Badge from "@/components/atoms/Badge";
+import Input from "@/components/atoms/Input";
+import Button from "@/components/atoms/Button";
+import Select from "@/components/atoms/Select";
 const AllBugs = () => {
 const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -18,17 +18,40 @@ const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
+const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveFilterName, setSaveFilterName] = useState("");
-  // Listen for saved filter applications from sidebar
-  useEffect(() => {
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingFilter, setEditingFilter] = useState(null);
+  const [editFilterName, setEditFilterName] = useState("");
+  
+  // Listen for saved filter applications and edits from sidebar
+useEffect(() => {
     const handleApplySavedFilter = (event) => {
       const { filter } = event.detail;
       applyFilter(filter);
     };
 
+    const handleEditSavedFilter = (event) => {
+      const { filter } = event.detail;
+      setEditingFilter(filter);
+      setEditFilterName(filter.name);
+      setShowEditDialog(true);
+    };
+
+    const handleToastNotification = (event) => {
+      const { type, message } = event.detail;
+      toast[type](message);
+    };
+
     window.addEventListener('applySavedFilter', handleApplySavedFilter);
-    return () => window.removeEventListener('applySavedFilter', handleApplySavedFilter);
+    window.addEventListener('editSavedFilter', handleEditSavedFilter);
+    window.addEventListener('showToast', handleToastNotification);
+    
+    return () => {
+      window.removeEventListener('applySavedFilter', handleApplySavedFilter);
+      window.removeEventListener('editSavedFilter', handleEditSavedFilter);
+      window.removeEventListener('showToast', handleToastNotification);
+    };
   }, []);
 
   const applyFilter = (filter) => {
@@ -97,6 +120,45 @@ const clearAllFilters = async () => {
       setSaveFilterName("");
     } catch (error) {
       toast.error("Failed to save filter");
+}
+  };
+
+  const handleUpdateFilter = async () => {
+    if (!editFilterName.trim()) {
+      toast.error("Please enter a name for the filter");
+      return;
+    }
+
+    if (!editingFilter) return;
+
+    try {
+      const { filterService } = await import('@/services/api/filterService');
+      
+      // Delete the old filter and create a new one with updated name
+      await filterService.deleteFilter(editingFilter.Id);
+      
+      // Create new filter with current form state
+      const activeFilters = {};
+      if (searchTerm) activeFilters.searchTerm = searchTerm;
+      if (statusFilter !== "all") activeFilters.status = statusFilter;
+      if (priorityFilter !== "all") activeFilters.priority = priorityFilter;
+      if (assigneeFilter !== "all") activeFilters.assigneeId = assigneeFilter;
+      if (severityFilter !== "all") activeFilters.severity = severityFilter;
+      if (dateFilter !== "all") activeFilters.updatedWithin = parseInt(dateFilter);
+      
+      await filterService.saveFilter(editFilterName, activeFilters);
+      
+      toast.success(`Filter "${editFilterName}" updated successfully`);
+      setShowEditDialog(false);
+      setEditingFilter(null);
+      setEditFilterName("");
+setEditFilterName("");
+      
+      // Trigger sidebar refresh
+      if (typeof window !== 'undefined' && window.CustomEvent) {
+        window.dispatchEvent(new CustomEvent('refreshSavedFilters'));
+      }
+    } catch (error) {
     }
   };
 
@@ -370,6 +432,54 @@ const handleBugClick = (bug) => {
                 </Button>
                 <Button onClick={handleSaveFilter}>
                   Save Filter
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+)}
+
+      {/* Edit Filter Dialog */}
+      {showEditDialog && editingFilter && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Filter</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filter Name
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Enter filter name..."
+                  value={editFilterName}
+                  onChange={(e) => setEditFilterName(e.target.value)}
+                />
+              </div>
+              <div className="text-sm text-gray-600">
+                <p className="mb-2">This filter will be updated with your current filter settings:</p>
+                <div className="space-y-1 text-xs">
+                  {searchTerm && <div>• Search: {searchTerm}</div>}
+                  {statusFilter !== "all" && <div>• Status: {statusFilter}</div>}
+                  {priorityFilter !== "all" && <div>• Priority: {priorityFilter}</div>}
+                  {assigneeFilter !== "all" && <div>• Assignee: {assigneeFilter}</div>}
+                  {severityFilter !== "all" && <div>• Severity: {severityFilter}</div>}
+                  {dateFilter !== "all" && <div>• Updated: Last {dateFilter} days</div>}
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setEditingFilter(null);
+                    setEditFilterName("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateFilter}>
+                  Update Filter
                 </Button>
               </div>
             </div>
