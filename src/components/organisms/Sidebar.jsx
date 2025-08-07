@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import ApperIcon from "@/components/ApperIcon";
 import { cn } from "@/utils/cn";
-
+import { AuthContext } from "../../App";
 const Sidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
 
@@ -39,9 +39,12 @@ const Sidebar = ({ isOpen, onToggle }) => {
     }
   ];
 
-  // Desktop sidebar
-  const DesktopSidebar = () => (
-    <div className="hidden lg:flex lg:flex-shrink-0">
+// Desktop sidebar
+  const DesktopSidebar = () => {
+    const { logout } = useContext(AuthContext);
+    
+    return (
+      <div className="hidden lg:flex lg:flex-shrink-0">
       <div className="flex flex-col w-60">
         <div className="flex flex-col h-screen bg-white border-r border-gray-200">
           {/* Logo */}
@@ -113,9 +116,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
                   <p className="text-xs text-gray-500">Administrator</p>
                 </div>
               </div>
-              <button
+<button
                 onClick={() => {
-                  const { logout } = React.useContext(require('../../App').AuthContext);
                   logout();
                 }}
                 className="p-1 text-gray-400 hover:text-gray-600 rounded"
@@ -128,7 +130,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   // Saved Filters Component
 const SavedFilters = () => {

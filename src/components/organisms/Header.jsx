@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import ApperIcon from "@/components/ApperIcon";
 import BugCreateModal from "@/components/organisms/BugCreateModal";
 import Dashboard from "@/components/pages/Dashboard";
 import Button from "@/components/atoms/Button";
+import { AuthContext } from "../../App";
 
 const Header = ({ onMenuClick }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
+  const { logout } = useContext(AuthContext);
   return (
     <>
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
@@ -57,8 +58,7 @@ const Header = ({ onMenuClick }) => {
                 <ApperIcon name="User" className="h-4 w-4 text-white" />
               </div>
               <button
-                onClick={() => {
-                  const { logout } = React.useContext(require('../../App').AuthContext);
+onClick={() => {
                   logout();
                 }}
                 className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
