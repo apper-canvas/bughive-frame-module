@@ -25,14 +25,21 @@ class ProjectService {
     return { ...project };
   }
 
-  async create(projectData) {
+async create(projectData) {
     await this.delay();
     
     // Find highest existing Id and add 1
     const maxId = this.projects.reduce((max, project) => Math.max(max, project.Id), 0);
     
     const newProject = {
-      ...projectData,
+      name: projectData.name,
+      description: projectData.description,
+      leadId: projectData.leadId,
+      status: projectData.status || 'Active',
+      bugCount: projectData.bugCount || 0,
+      teamMembers: projectData.teamMembers || [],
+      bugPriorityDefault: projectData.bugPriorityDefault || 'Medium',
+      environments: projectData.environments || ['Development', 'Staging', 'Production'],
       Id: maxId + 1,
       createdAt: new Date().toISOString()
     };
