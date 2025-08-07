@@ -57,13 +57,21 @@ const AllBugs = () => {
     return count;
   };
 
-  const clearAllFilters = () => {
+const clearAllFilters = async () => {
     setSearchTerm("");
     setStatusFilter("all");
     setPriorityFilter("all");
     setAssigneeFilter("all");
     setSeverityFilter("all");
     setDateFilter("all");
+    
+    // Clear active filter from localStorage
+    try {
+      const { filterService } = await import('@/services/api/filterService');
+      filterService.saveActiveFilter(null);
+    } catch (error) {
+      console.error('Failed to clear active filter:', error);
+    }
   };
 
   const handleSaveFilter = async () => {

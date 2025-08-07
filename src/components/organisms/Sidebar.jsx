@@ -123,7 +123,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
     const [savedFilters, setSavedFilters] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
+useEffect(() => {
       loadSavedFilters();
     }, []);
 
@@ -140,11 +140,15 @@ const Sidebar = ({ isOpen, onToggle }) => {
     };
 const applyFilter = (filter) => {
       // Dispatch custom event to notify AllBugs page
-      if (typeof window !== 'undefined' && window.CustomEvent) {
-        const event = new CustomEvent('applySavedFilter', {
-          detail: { filter }
-        });
-        window.dispatchEvent(event);
+      if (typeof window !== 'undefined' && window.CustomEvent && window.dispatchEvent) {
+        try {
+          const event = new window.CustomEvent('applySavedFilter', {
+            detail: { filter }
+          });
+          window.dispatchEvent(event);
+        } catch (error) {
+          console.error('Failed to dispatch filter event:', error);
+        }
       }
     };
     if (isLoading) {

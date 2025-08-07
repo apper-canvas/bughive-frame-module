@@ -49,7 +49,7 @@ class FilterService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  loadCustomFilters() {
+loadCustomFilters() {
     try {
       const saved = localStorage.getItem('bughive_custom_filters');
       return saved ? JSON.parse(saved) : [];
@@ -60,9 +60,35 @@ class FilterService {
 
   saveCustomFilters() {
     try {
-      localStorage.setItem('bughive_custom_filters', JSON.stringify(this.customFilters));
+      const data = {
+        customFilters: this.customFilters,
+        activeFilter: this.activeFilter || null
+      };
+      localStorage.setItem('bughive_custom_filters', JSON.stringify(data));
     } catch (error) {
       console.error('Failed to save custom filters:', error);
+    }
+  }
+
+  loadActiveFilter() {
+    try {
+      const saved = localStorage.getItem('bughive_custom_filters');
+      if (saved) {
+        const data = JSON.parse(saved);
+        return data.activeFilter || null;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  saveActiveFilter(filterState) {
+    try {
+      this.activeFilter = filterState;
+      this.saveCustomFilters();
+    } catch (error) {
+      console.error('Failed to save active filter:', error);
     }
   }
 
