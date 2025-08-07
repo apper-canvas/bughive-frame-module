@@ -35,15 +35,14 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
     try {
       setLoading(true);
       const bugData = await bugService.getById(bugId);
-      setBug(bugData);
+setBug(bugData);
       setEditValues({
-        title: bugData.title,
-        description: bugData.description,
-        priority: bugData.priority,
-        assigneeId: bugData.assigneeId,
-        status: bugData.status
+        title: bugData.title_c || bugData.Name || bugData.title,
+        description: bugData.description_c || bugData.description,
+        priority: bugData.priority_c || bugData.priority,
+        assigneeId: bugData.assignee_id_c || bugData.assigneeId,
+        status: bugData.status_c || bugData.status
       });
-      
       // Generate mock activities for demonstration
       generateMockActivities(bugData);
     } catch (error) {
@@ -63,21 +62,21 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
     }
   };
 
-  const generateMockActivities = (bugData) => {
+const generateMockActivities = (bugData) => {
     const mockActivities = [
       {
         id: 1,
         type: 'created',
-        userId: bugData.reporterId,
-        timestamp: bugData.createdAt,
-        data: { title: bugData.title }
+        userId: bugData.reporter_id_c || bugData.reporterId,
+        timestamp: bugData.created_at_c || bugData.createdAt,
+        data: { title: bugData.title_c || bugData.Name || bugData.title }
       },
       {
         id: 2,
         type: 'status_change',
-        userId: bugData.assigneeId,
-        timestamp: bugData.updatedAt,
-        data: { from: 'Open', to: bugData.status }
+        userId: bugData.assignee_id_c || bugData.assigneeId,
+        timestamp: bugData.updated_at_c || bugData.updatedAt,
+        data: { from: 'Open', to: bugData.status_c || bugData.status }
       },
       {
         id: 3,
@@ -89,7 +88,7 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
       {
         id: 4,
         type: 'time_logged',
-        userId: bugData.assigneeId,
+        userId: bugData.assignee_id_c || bugData.assigneeId,
         timestamp: '2024-01-16T14:15:00Z',
         data: { hours: 2.5, description: 'Investigation and initial debugging' }
       }
@@ -97,8 +96,20 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
     setActivities(mockActivities);
   };
 
-  const getUserById = (userId) => {
-    return users.find(user => user.Id == userId) || { name: 'Unknown User', avatar: '' };
+const getUserById = (userId) => {
+    const user = users.find(user => user.Id == userId);
+    if (!user) return { name: 'Unknown User', avatar: '', displayName: 'Unknown User' };
+    
+    // Use database field names for user name
+    const firstName = user.first_name_c || user.Name || "";
+    const lastName = user.last_name_c || "";
+    const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || user.Name || "Unknown User";
+    
+    return {
+      ...user,
+      name: displayName,
+      displayName
+    };
   };
 
   const handleFieldEdit = (field, value) => {
@@ -112,8 +123,24 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
       return;
     }
 
-    try {
-      const updateData = { [field]: editValues[field] };
+try {
+      // Map UI field names to database field names
+      const fieldMapping = {
+        title: 'title_c',
+        description: 'description_c', 
+        priority: 'priority_c',
+        status: 'status_c',
+        assigneeId: 'assignee_id_c'
+      };
+      
+      const dbFieldName = fieldMapping[field] || field;
+      const updateData = { [dbFieldName]: editValues[field] };
+      
+      // Also update Name field if title is being updated (since Name is updateable)
+      if (field === 'title') {
+        updateData.Name = editValues[field];
+      }
+      
       const updatedBug = await bugService.update(bug.Id, updateData);
       setBug(updatedBug);
       
@@ -136,11 +163,14 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
     }
   };
 
-  const handleStatusChange = async (newStatus) => {
+const handleStatusChange = async (newStatus) => {
     if (!bug || newStatus === bug.status) return;
 
     try {
-      const updatedBug = await bugService.update(bug.Id, { status: newStatus });
+      const updatedBug = await bugService.update(bug.Id, { 
+        status_c: newStatus,
+        updated_at_c: new Date().toISOString()
+      });
       setBug(updatedBug);
       
       const newActivity = {
@@ -318,9 +348,9 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                   ) : (
                     <div 
                       className="p-3 border border-transparent hover:border-gray-300 rounded-md cursor-pointer transition-colors"
-                      onClick={() => handleFieldEdit('title', bug.title)}
+onClick={() => handleFieldEdit('title', bug.title_c || bug.Name || bug.title)}
                     >
-                      <p className="text-gray-900 font-medium">{bug.title}</p>
+                      <p className="text-gray-900 font-medium">{bug.title_c || bug.Name || bug.title}</p>
                     </div>
                   )}
                 </div>
@@ -343,10 +373,10 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                     </div>
                   ) : (
                     <div 
-                      className="p-3 border border-transparent hover:border-gray-300 rounded-md cursor-pointer transition-colors min-h-[100px]"
-                      onClick={() => handleFieldEdit('description', bug.description)}
+className="p-3 border border-transparent hover:border-gray-300 rounded-md cursor-pointer transition-colors min-h-[100px]"
+                      onClick={() => handleFieldEdit('description', bug.description_c || bug.description)}
                     >
-                      <p className="text-gray-700 whitespace-pre-wrap">{bug.description}</p>
+                      <p className="text-gray-700 whitespace-pre-wrap">{bug.description_c || bug.description}</p>
                     </div>
                   )}
                 </div>
@@ -354,9 +384,9 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                 {/* Reproduction Steps */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Reproduction Steps</label>
-                  <div className="p-3 bg-gray-50 rounded-md">
+<div className="p-3 bg-gray-50 rounded-md">
                     <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
-                      {bug.reproductionSteps}
+                      {bug.reproductionSteps || "No reproduction steps provided"}
                     </pre>
                   </div>
                 </div>
@@ -364,8 +394,8 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                 {/* Status and Priority */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
-                    <StatusBadge status={bug.status} />
+<label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
+                    <StatusBadge status={bug.status_c || bug.status} />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block">Priority</label>
@@ -385,9 +415,9 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                           <ApperIcon name="Check" className="h-4 w-4" />
                         </Button>
                       </div>
-                    ) : (
-                      <div onClick={() => handleFieldEdit('priority', bug.priority)}>
-                        <PriorityBadge priority={bug.priority} />
+) : (
+                      <div onClick={() => handleFieldEdit('priority', bug.priority_c || bug.priority)}>
+                        <PriorityBadge priority={bug.priority_c || bug.priority} />
                       </div>
                     )}
                   </div>
@@ -398,29 +428,35 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block">Assignee</label>
                     {editingField === 'assigneeId' ? (
-                      <div className="flex space-x-2">
+<div className="flex space-x-2">
                         <Select
                           value={editValues.assigneeId}
                           onChange={(e) => setEditValues(prev => ({ ...prev, assigneeId: e.target.value }))}
                           autoFocus
                         >
-                          {users.map(user => (
-                            <option key={user.Id} value={user.Id}>{user.name}</option>
-                          ))}
+                          {users.map(user => {
+                            const firstName = user.first_name_c || user.Name || "";
+                            const lastName = user.last_name_c || "";
+                            const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || user.Name || "Unknown User";
+                            
+                            return (
+                              <option key={user.Id} value={user.Id}>{displayName}</option>
+                            );
+                          })}
                         </Select>
                         <Button size="sm" onClick={() => handleFieldSave('assigneeId')}>
                           <ApperIcon name="Check" className="h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
-                      <div 
+<div 
                         className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-md cursor-pointer transition-colors"
-                        onClick={() => handleFieldEdit('assigneeId', bug.assigneeId)}
+                        onClick={() => handleFieldEdit('assigneeId', bug.assignee_id_c || bug.assigneeId)}
                       >
                         <div className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
                           <ApperIcon name="User" className="h-4 w-4 text-gray-500" />
                         </div>
-                        <span className="text-gray-900">{getUserById(bug.assigneeId).name}</span>
+                        <span className="text-gray-900">{getUserById(bug.assignee_id_c || bug.assigneeId).displayName}</span>
                       </div>
                     )}
                   </div>
@@ -428,9 +464,9 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                     <label className="text-sm font-medium text-gray-700 mb-2 block">Reporter</label>
                     <div className="flex items-center space-x-2 p-2">
                       <div className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
-                        <ApperIcon name="User" className="h-4 w-4 text-gray-500" />
+<ApperIcon name="User" className="h-4 w-4 text-gray-500" />
                       </div>
-                      <span className="text-gray-700">{getUserById(bug.reporterId).name}</span>
+                      <span className="text-gray-700">{getUserById(bug.reporter_id_c || bug.reporterId).displayName}</span>
                     </div>
                   </div>
                 </div>
@@ -440,19 +476,23 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block">Created</label>
 <p className="text-sm text-gray-600">
-                      {bug.createdAt && isValid(new Date(bug.createdAt)) 
-                        ? format(new Date(bug.createdAt), 'MMM dd, yyyy HH:mm')
-                        : 'Invalid date'
-                      }
+                      {(() => {
+                        const date = new Date(bug.created_at_c || bug.CreatedOn || bug.createdAt);
+                        return date && isValid(date) 
+                          ? format(date, 'MMM dd, yyyy HH:mm')
+                          : 'Invalid date';
+                      })()}
                     </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block">Last Updated</label>
 <p className="text-sm text-gray-600">
-                      {bug.updatedAt && isValid(new Date(bug.updatedAt)) 
-                        ? format(new Date(bug.updatedAt), 'MMM dd, yyyy HH:mm')
-                        : 'Invalid date'
-                      }
+                      {(() => {
+                        const date = new Date(bug.updated_at_c || bug.ModifiedOn || bug.updatedAt);
+                        return date && isValid(date) 
+                          ? format(date, 'MMM dd, yyyy HH:mm')
+                          : 'Invalid date';
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -460,10 +500,27 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                 {/* Environment */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Environment</label>
-                  <div className="p-3 bg-gray-50 rounded-md space-y-1">
-                    <p className="text-sm"><span className="font-medium">Browser:</span> {bug.environment?.browser}</p>
-                    <p className="text-sm"><span className="font-medium">OS:</span> {bug.environment?.os}</p>
-                    <p className="text-sm"><span className="font-medium">Device:</span> {bug.environment?.device}</p>
+<div className="p-3 bg-gray-50 rounded-md space-y-1">
+                    {(() => {
+                      let environment = {};
+                      try {
+                        if (bug.environment_c) {
+                          environment = typeof bug.environment_c === 'string' ? JSON.parse(bug.environment_c) : bug.environment_c;
+                        } else if (bug.environment) {
+                          environment = bug.environment;
+                        }
+                      } catch (error) {
+                        environment = {};
+                      }
+                      
+                      return (
+                        <>
+                          <p className="text-sm"><span className="font-medium">Browser:</span> {environment.browser || 'N/A'}</p>
+                          <p className="text-sm"><span className="font-medium">OS:</span> {environment.os || 'N/A'}</p>
+                          <p className="text-sm"><span className="font-medium">Device:</span> {environment.device || 'N/A'}</p>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -500,8 +557,8 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-gray-900">{user.name}</span>
+<div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-gray-900">{user.displayName}</span>
                           <div className={cn(
                             "flex items-center space-x-1 px-2 py-1 rounded-full text-xs",
                             activity.type === 'comment' && "bg-blue-100 text-blue-800",

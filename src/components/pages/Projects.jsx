@@ -140,11 +140,18 @@ const ProjectCreateModal = ({ isOpen, onClose, onProjectCreated, users }) => {
                 error={errors.leadId}
               >
                 <option value="">Select project lead</option>
-                {users.map(user => (
-                  <option key={user.Id} value={user.Id.toString()}>
-                    {user.name} - {user.role}
-                  </option>
-                ))}
+{users.map(user => {
+                  const firstName = user.first_name_c || user.Name || "";
+                  const lastName = user.last_name_c || "";
+                  const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || user.Name || "Unknown User";
+                  const role = user.role_c || user.role || "";
+                  
+                  return (
+                    <option key={user.Id} value={user.Id.toString()}>
+                      {displayName} - {role}
+                    </option>
+                  );
+                })}
               </Select>
             </FormField>
           </div>
@@ -186,22 +193,29 @@ const ProjectCreateModal = ({ isOpen, onClose, onProjectCreated, users }) => {
 
           <FormField label="Team Members">
             <div className="space-y-3 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
-              {users.map(user => (
-                <label key={user.Id} className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.teamMembers.includes(user.Id.toString())}
-                    onChange={() => handleTeamMemberToggle(user.Id.toString())}
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 bg-gray-200 rounded-full flex items-center justify-center">
-                      <ApperIcon name="User" className="h-3 w-3 text-gray-500" />
+{users.map(user => {
+                const firstName = user.first_name_c || user.Name || "";
+                const lastName = user.last_name_c || "";
+                const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || user.Name || "Unknown User";
+                const role = user.role_c || user.role || "";
+                
+                return (
+                  <label key={user.Id} className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.teamMembers.includes(user.Id.toString())}
+                      onChange={() => handleTeamMemberToggle(user.Id.toString())}
+                      className="rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <div className="h-6 w-6 bg-gray-200 rounded-full flex items-center justify-center">
+                        <ApperIcon name="User" className="h-3 w-3 text-gray-500" />
+                      </div>
+                      <span className="text-sm text-gray-700">{displayName} - {role}</span>
                     </div>
-                    <span className="text-sm text-gray-700">{user.name} - {user.role}</span>
-                  </div>
-                </label>
-              ))}
+                  </label>
+                );
+              })}
             </div>
           </FormField>
 
@@ -295,11 +309,12 @@ const Projects = () => {
   };
 
 const getProjectStats = (projectId) => {
-    const projectBugs = bugs.filter(bug => bug.projectId === projectId.toString());
-    const openBugs = projectBugs.filter(bug => bug.status === "Open").length;
-    const criticalBugs = projectBugs.filter(bug => bug.priority === "Critical").length;
-    const resolvedBugs = projectBugs.filter(bug => bug.status === "Resolved").length;
-    const inProgressBugs = projectBugs.filter(bug => bug.status === "In Progress").length;
+    // Use database field names for project filtering
+    const projectBugs = bugs.filter(bug => (bug.project_id_c || bug.projectId) === projectId.toString());
+    const openBugs = projectBugs.filter(bug => (bug.status_c || bug.status) === "Open").length;
+    const criticalBugs = projectBugs.filter(bug => (bug.priority_c || bug.priority) === "Critical").length;
+    const resolvedBugs = projectBugs.filter(bug => (bug.status_c || bug.status) === "Resolved").length;
+    const inProgressBugs = projectBugs.filter(bug => (bug.status_c || bug.status) === "In Progress").length;
     
     // Calculate average resolution time (mock calculation)
     const avgResolutionDays = projectBugs.length > 0 ? Math.round(Math.random() * 10 + 3) : 0;
@@ -315,9 +330,19 @@ const getProjectStats = (projectId) => {
     };
   };
 
-  const getProjectLead = (leadId) => {
+const getProjectLead = (leadId) => {
     const lead = users.find(user => user.Id === parseInt(leadId));
-    return lead ? lead : null;
+    if (!lead) return null;
+    
+    // Format lead name using database fields
+    const firstName = lead.first_name_c || lead.Name || "";
+    const lastName = lead.last_name_c || "";
+    const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lead.Name || "Unknown Lead";
+    
+    return {
+      ...lead,
+      displayName
+    };
   };
 
   const getProjectTeamMembers = (projectId) => {
@@ -422,10 +447,9 @@ return (
             icon="FolderOpen"
             className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
           />
-          
-          <MetricCard
+<MetricCard
             title="Active Projects"
-            value={projects.filter(p => p.status === "Active").length}
+            value={projects.filter(p => (p.status_c || p.status) === "Active").length}
             icon="Play"
             className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
           />
@@ -447,11 +471,10 @@ return (
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => {
+{projects.map((project) => {
             const stats = getProjectStats(project.Id);
-            const lead = getProjectLead(project.leadId);
+            const lead = getProjectLead(project.lead_id_c || project.leadId);
             const teamMembers = getProjectTeamMembers(project.Id);
-            
             return (
               <div 
                 key={project.Id} 
@@ -460,25 +483,25 @@ return (
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
+<div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors duration-200">
-                      {project.name}
+                      {project.Name || project.name}
                     </h3>
                     <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                      {project.description}
+                      {project.description_c || project.description}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2 ml-3">
-                    <Badge 
-                      variant={project.status === "Active" ? "success" : 
-                              project.status === "Planning" ? "warning" : "default"}
+<Badge 
+                      variant={(project.status_c || project.status) === "Active" ? "success" : 
+                              (project.status_c || project.status) === "Planning" ? "warning" : "default"}
                     >
-                      {project.status}
+                      {project.status_c || project.status}
                     </Badge>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteProject(project.Id, project.name);
+handleDeleteProject(project.Id, project.Name || project.name);
                       }}
                       className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                     >
@@ -493,9 +516,9 @@ return (
                     <div className="flex items-center space-x-2">
                       <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center">
                         <ApperIcon name="Crown" className="h-3 w-3 text-primary" />
-                      </div>
+</div>
                       <span className="text-sm text-gray-600">
-                        Led by <span className="font-medium text-gray-900">{lead.name}</span>
+                        Led by <span className="font-medium text-gray-900">{lead.displayName}</span>
                       </span>
                     </div>
                   )}
@@ -555,9 +578,9 @@ return (
                   </div>
                 </div>
 
-                {/* Footer Info */}
+{/* Footer Info */}
                 <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-200">
-                  <span>Created {formatDate(project.createdAt)}</span>
+                  <span>Created {formatDate(project.created_at_c || project.CreatedOn || project.createdAt)}</span>
                   <div className="flex items-center space-x-1">
                     <ApperIcon name="Clock" className="h-3 w-3" />
                     <span>Avg: {stats.avgResolutionTime}d</span>
@@ -579,7 +602,7 @@ return (
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      toast.info(`Opening settings for ${project.name}...`);
+toast.info(`Opening settings for ${project.Name || project.name}...`);
                     }}
                     className="flex items-center space-x-1 text-xs text-gray-600 hover:text-primary font-medium"
                   >

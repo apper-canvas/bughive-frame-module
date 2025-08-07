@@ -8,6 +8,7 @@ import PriorityBadge from "@/components/molecules/PriorityBadge";
 import Loading from "@/components/ui/Loading";
 import Error from "@/components/ui/Error";
 import Empty from "@/components/ui/Empty";
+import Reports from "@/components/pages/Reports";
 
 const BugTable = ({ 
   searchTerm = "",
@@ -73,20 +74,25 @@ const isWithinDateRange = (updatedAt, days) => {
   };
 const getUserName = (userId) => {
     const user = users.find(u => u.Id === parseInt(userId));
-    return user ? user.name : "Unknown User";
+    if (!user) return "Unknown User";
+    
+    // Use database field names for user name
+    const firstName = user.first_name_c || user.Name || "";
+    const lastName = user.last_name_c || "";
+    return firstName && lastName ? `${firstName} ${lastName}` : firstName || user.Name || "Unknown User";
   };
 
   // Filter bugs based on search term
 const filteredBugs = bugs.filter(bug => {
     // Search filter
     if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      const assigneeName = getUserName(bug.assigneeId).toLowerCase();
-      const reporterName = getUserName(bug.reporterId).toLowerCase();
+const searchLower = searchTerm.toLowerCase();
+      const assigneeName = getUserName(bug.assignee_id_c || bug.assigneeId).toLowerCase();
+      const reporterName = getUserName(bug.reporter_id_c || bug.reporterId).toLowerCase();
       
       const matchesSearch = (
-        bug.title.toLowerCase().includes(searchLower) ||
-        bug.description.toLowerCase().includes(searchLower) ||
+        (bug.title_c || bug.Name || bug.title || "").toLowerCase().includes(searchLower) ||
+        (bug.description_c || bug.description || "").toLowerCase().includes(searchLower) ||
         assigneeName.includes(searchLower) ||
         reporterName.includes(searchLower) ||
         bug.Id.toString().includes(searchLower)
@@ -95,30 +101,31 @@ const filteredBugs = bugs.filter(bug => {
       if (!matchesSearch) return false;
     }
 
-    // Status filter
-    if (statusFilter !== "all" && bug.status !== statusFilter) {
+// Status filter
+    if (statusFilter !== "all" && (bug.status_c || bug.status) !== statusFilter) {
       return false;
     }
 
     // Priority filter
-    if (priorityFilter !== "all" && bug.priority !== priorityFilter) {
+    if (priorityFilter !== "all" && (bug.priority_c || bug.priority) !== priorityFilter) {
       return false;
     }
 
     // Assignee filter
-    if (assigneeFilter !== "all" && bug.assigneeId !== assigneeFilter) {
+    if (assigneeFilter !== "all" && (bug.assignee_id_c || bug.assigneeId) !== assigneeFilter) {
       return false;
     }
 
-    // Severity filter
-    if (severityFilter !== "all" && bug.severity !== severityFilter) {
+// Severity filter
+    if (severityFilter !== "all" && (bug.severity_c || bug.severity) !== severityFilter) {
       return false;
     }
 
     // Date filter
     if (dateFilter !== "all") {
       const days = parseInt(dateFilter);
-      if (!isWithinDateRange(bug.updatedAt, days)) {
+      const dateToCheck = bug.updated_at_c || bug.updatedAt;
+      if (!isWithinDateRange(dateToCheck, days)) {
         return false;
       }
     }
@@ -214,40 +221,40 @@ if (loading) return <Loading type="table" />;
                 </div>
               </th>
               <th 
-                className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                onClick={() => handleSort("title")}
+className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                onClick={() => handleSort("title_c")}
               >
                 <div className="flex items-center space-x-2">
                   <span>Title</span>
-                  <ApperIcon name={getSortIcon("title")} className="h-3 w-3" />
+                  <ApperIcon name={getSortIcon("title_c")} className="h-3 w-3" />
                 </div>
               </th>
               <th 
-                className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                onClick={() => handleSort("status")}
+className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                onClick={() => handleSort("status_c")}
               >
                 <div className="flex items-center space-x-2">
                   <span>Status</span>
-                  <ApperIcon name={getSortIcon("status")} className="h-3 w-3" />
+                  <ApperIcon name={getSortIcon("status_c")} className="h-3 w-3" />
                 </div>
               </th>
               <th 
-                className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                onClick={() => handleSort("priority")}
+className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                onClick={() => handleSort("priority_c")}
               >
                 <div className="flex items-center space-x-2">
                   <span>Priority</span>
-                  <ApperIcon name={getSortIcon("priority")} className="h-3 w-3" />
+                  <ApperIcon name={getSortIcon("priority_c")} className="h-3 w-3" />
                 </div>
               </th>
               <th>Assignee</th>
               <th 
-                className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                onClick={() => handleSort("createdAt")}
+className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                onClick={() => handleSort("created_at_c")}
               >
                 <div className="flex items-center space-x-2">
                   <span>Created</span>
-                  <ApperIcon name={getSortIcon("createdAt")} className="h-3 w-3" />
+                  <ApperIcon name={getSortIcon("created_at_c")} className="h-3 w-3" />
                 </div>
               </th>
               <th>Actions</th>
@@ -263,30 +270,30 @@ if (loading) return <Loading type="table" />;
                 <td>
                   <span className="font-mono text-sm font-medium">#{bug.Id}</span>
                 </td>
-                <td>
+<td>
                   <div className="max-w-xs">
-                    <p className="font-medium text-gray-900 truncate">{bug.title}</p>
-                    <p className="text-sm text-gray-500 truncate">{bug.description}</p>
+                    <p className="font-medium text-gray-900 truncate">{bug.title_c || bug.Name || bug.title}</p>
+                    <p className="text-sm text-gray-500 truncate">{bug.description_c || bug.description}</p>
                   </div>
                 </td>
-                <td>
-                  <StatusBadge status={bug.status} />
+<td>
+                  <StatusBadge status={bug.status_c || bug.status} />
                 </td>
                 <td>
-                  <PriorityBadge priority={bug.priority} />
+                  <PriorityBadge priority={bug.priority_c || bug.priority} />
                 </td>
-                <td>
+<td>
                   <div className="flex items-center space-x-2">
                     <div className="h-6 w-6 bg-gray-200 rounded-full flex items-center justify-center">
                       <ApperIcon name="User" className="h-3 w-3 text-gray-500" />
                     </div>
-                    <span className="text-sm text-gray-900">{getUserName(bug.assigneeId)}</span>
+                    <span className="text-sm text-gray-900">{getUserName(bug.assignee_id_c || bug.assigneeId)}</span>
                   </div>
                 </td>
-<td>
+                <td>
                   <span className="text-sm text-gray-500">
                     {(() => {
-                      const dateValue = bug.createdAt || bug.created_at_c;
+                      const dateValue = bug.created_at_c || bug.CreatedOn || bug.createdAt;
                       if (!dateValue) return "N/A";
                       
                       const date = new Date(dateValue);

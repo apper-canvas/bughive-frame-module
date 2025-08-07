@@ -134,14 +134,23 @@ const [formData, setFormData] = useState({
     setLoading(true);
 
     try {
+// Format data using database field names
       const bugData = {
-        ...formData,
-        status: "Open",
-        reporterId: "1", // Mock current user ID
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        title_c: formData.title,
+        description_c: formData.description,
+        priority_c: formData.priority,
+        status_c: "Open",
+        estimated_time_hours_c: formData.estimatedTimeHours ? parseFloat(formData.estimatedTimeHours) : null,
+        actual_time_hours_c: formData.actualTimeHours ? parseFloat(formData.actualTimeHours) : null,
+        environment_c: JSON.stringify(formData.environment),
+        assignee_id_c: formData.assigneeId ? parseInt(formData.assigneeId) : null,
+        reporter_id_c: 1, // Mock current user ID
+        project_id_c: formData.projectId ? parseInt(formData.projectId) : null,
+        created_at_c: new Date().toISOString(),
+        updated_at_c: new Date().toISOString(),
+        // Include Name field as it's updateable in the schema
+        Name: formData.title
       };
-
       await bugService.create(bugData);
       
       toast.success("Bug report created successfully!");
@@ -267,9 +276,15 @@ const [formData, setFormData] = useState({
                 error={errors.assigneeId}
               >
                 <option value="">Select team member</option>
-                {users.map(user => (
-                  <option key={user.Id} value={user.Id}>{user.name}</option>
-                ))}
+{users.map(user => {
+                  const firstName = user.first_name_c || user.Name || "";
+                  const lastName = user.last_name_c || "";
+                  const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || user.Name || "Unknown User";
+                  
+                  return (
+                    <option key={user.Id} value={user.Id}>{displayName}</option>
+                  );
+                })}
               </Select>
             </FormField>
 
@@ -281,8 +296,8 @@ const [formData, setFormData] = useState({
                 error={errors.projectId}
               >
                 <option value="">Select project</option>
-                {projects.map(project => (
-                  <option key={project.Id} value={project.Id}>{project.name}</option>
+{projects.map(project => (
+                  <option key={project.Id} value={project.Id}>{project.Name || project.name}</option>
                 ))}
               </Select>
 </FormField>

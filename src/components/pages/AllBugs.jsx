@@ -64,57 +64,56 @@ const SavedFilters = () => {
     }
   };
 
-  const handleDeleteFilter = async (filter) => {
+const handleDeleteFilter = async (filter) => {
     setIsDeleting(true);
     try {
       const { filterService } = await import('@/services/api/filterService');
       await filterService.deleteFilter(filter.Id);
       
-      // Refresh the filters list
-      await loadSavedFilters();
+      // Remove from local state
+      setSavedFilters(prev => prev.filter(f => f.Id !== filter.Id));
       
-      // Show success notification
+      // Dispatch success event
       if (typeof window !== 'undefined' && window.CustomEvent && window.dispatchEvent) {
         try {
           const event = new window.CustomEvent('showToast', {
-            detail: { 
-              type: 'success', 
-              message: `Filter "${filter.name}" deleted successfully` 
+            detail: {
+              type: 'success',
+              message: `Filter "${filter.name}" deleted successfully`
             }
           });
           window.dispatchEvent(event);
         } catch (error) {
-          console.error('Failed to dispatch success toast:', error);
+          console.error('Failed to dispatch toast event:', error);
         }
       }
-      setShowDeleteConfirm(false);
-      setFilterToDelete(null);
     } catch (error) {
+      console.error('Failed to delete filter:', error);
       if (typeof window !== 'undefined' && window.CustomEvent && window.dispatchEvent) {
         try {
           const event = new window.CustomEvent('showToast', {
-            detail: { 
-              type: 'error', 
-              message: 'Failed to delete filter' 
+            detail: {
+              type: 'error',
+              message: 'Failed to delete filter'
             }
           });
           window.dispatchEvent(event);
         } catch (eventError) {
-          console.error('Failed to dispatch error toast:', eventError);
+          console.error('Failed to dispatch error toast event:', eventError);
         }
       }
-      console.error('Failed to delete filter:', error);
     } finally {
       setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setFilterToDelete(null);
     }
   };
 
   if (isLoading) {
     return (
-      <Button variant="ghost" size="sm" disabled>
-        <ApperIcon name="Loader2" className="animate-spin h-4 w-4 mr-1" />
-        Loading
-      </Button>
+      <div className="flex items-center justify-center p-4">
+        <Loading />
+      </div>
     );
   }
 
@@ -131,12 +130,14 @@ const SavedFilters = () => {
         <ApperIcon name="ChevronDown" className="h-4 w-4 ml-1" />
       </Button>
 
+      {/* Dropdown Menu */}
       {showDropdown && (
-        <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-auto">
-          <div className="p-3">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Saved Filters</h3>
+        <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-80 overflow-y-auto">
+          <div className="p-2">
             {savedFilters.length === 0 ? (
-              <p className="text-sm text-gray-500 py-4 text-center">No saved filters</p>
+              <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                No saved filters yet
+              </div>
             ) : (
               <div className="space-y-1">
                 {savedFilters.map((filter) => (
@@ -232,7 +233,13 @@ const SavedFilters = () => {
 };
 
 const AllBugs = () => {
-const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [bugs, setBugs] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [sortField, setSortField] = useState("updated_at_c");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedBug, setSelectedBug] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -247,8 +254,48 @@ const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [editingFilter, setEditingFilter] = useState(null);
   const [editFilterName, setEditFilterName] = useState("");
   
+// Helper functions
+  const getUserName = (userId) => {
+    const user = users.find(u => u.Id === parseInt(userId));
+    if (!user) return "Unknown User";
+    
+    // Use database field names for user name
+    const firstName = user.first_name_c || user.Name || "";
+    const lastName = user.last_name_c || "";
+    return firstName && lastName ? `${firstName} ${lastName}` : firstName || user.Name || "Unknown User";
+  };
+
+  const isWithinDateRange = (dateString, days) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= days;
+  };
+
+  // Data loading effect
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        // Load bugs and users data here
+        // This would typically come from your API service
+        setBugs([]);
+        setUsers([]);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   // Listen for saved filter applications and edits from sidebar
-useEffect(() => {
+  useEffect(() => {
     const handleApplySavedFilter = (event) => {
       const { filter } = event.detail;
       applyFilter(filter);
@@ -283,6 +330,82 @@ useEffect(() => {
       window.removeEventListener('refreshSavedFilters', handleRefreshSavedFilters);
     };
   }, []);
+
+  // Filter and sort bugs
+  const filteredBugs = bugs.filter(bug => {
+    // Search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      const assigneeName = getUserName(bug.assignee_id_c || bug.assigneeId).toLowerCase();
+      const reporterName = getUserName(bug.reporter_id_c || bug.reporterId).toLowerCase();
+      
+      const matchesSearch = (
+        (bug.title_c || bug.Name || bug.title || "").toLowerCase().includes(searchLower) ||
+        (bug.description_c || bug.description || "").toLowerCase().includes(searchLower) ||
+        assigneeName.includes(searchLower) ||
+        reporterName.includes(searchLower) ||
+        bug.Id.toString().includes(searchLower)
+      );
+      
+      if (!matchesSearch) return false;
+    }
+
+    // Status filter
+    if (statusFilter !== "all" && (bug.status_c || bug.status) !== statusFilter) {
+      return false;
+    }
+
+    // Priority filter
+    if (priorityFilter !== "all" && (bug.priority_c || bug.priority) !== priorityFilter) {
+      return false;
+    }
+
+    // Assignee filter
+    if (assigneeFilter !== "all" && (bug.assignee_id_c || bug.assigneeId) !== assigneeFilter) {
+      return false;
+    }
+
+    // Severity filter
+    if (severityFilter !== "all" && (bug.severity_c || bug.severity) !== severityFilter) {
+      return false;
+    }
+
+    // Date filter
+    if (dateFilter !== "all") {
+      const days = parseInt(dateFilter);
+      const dateToCheck = bug.updated_at_c || bug.updatedAt;
+      if (!isWithinDateRange(dateToCheck, days)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Sort filtered bugs
+  const sortedBugs = [...filteredBugs].sort((a, b) => {
+    let aValue, bValue;
+
+    if (sortField === "createdAt" || sortField === "updatedAt" || sortField === "created_at_c" || sortField === "updated_at_c") {
+      // Use database field names first, fallback to legacy
+      const aDate = a.created_at_c || a.createdAt || a.updated_at_c || a.updatedAt;
+      const bDate = b.created_at_c || b.createdAt || b.updated_at_c || b.updatedAt;
+      
+      aValue = aDate ? new Date(aDate) : new Date(0);
+      bValue = bDate ? new Date(bDate) : new Date(0);
+      
+      // Handle invalid dates by treating them as very old dates for sorting
+      if (isNaN(aValue.getTime())) aValue = new Date(0);
+      if (isNaN(bValue.getTime())) bValue = new Date(0);
+    } else {
+      aValue = a[sortField] || "";
+      bValue = b[sortField] || "";
+    }
+
+    if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
 
   const applyFilter = (filter) => {
     const { filters } = filter;
@@ -382,8 +505,6 @@ const handleSaveFilter = async () => {
       setShowEditDialog(false);
       setEditingFilter(null);
       setEditFilterName("");
-setEditFilterName("");
-      
       // Trigger sidebar refresh
       if (typeof window !== 'undefined' && window.CustomEvent) {
         window.dispatchEvent(new window.CustomEvent('refreshSavedFilters'));
@@ -513,7 +634,7 @@ const handleBugClick = (bug) => {
                 value={assigneeFilter}
                 onChange={(e) => setAssigneeFilter(e.target.value)}
               >
-                <option value="all">All Assignees</option>
+<option value="all">All Assignees</option>
                 <option value="1">Sarah Chen</option>
                 <option value="2">Michael Rodriguez</option>
                 <option value="3">Emily Johnson</option>
@@ -587,9 +708,9 @@ const handleBugClick = (bug) => {
                   </button>
                 </Badge>
               )}
-              {assigneeFilter !== "all" && (
+{assigneeFilter !== "all" && (
                 <Badge variant="secondary" className="flex items-center">
-                  Assignee: {assigneeFilter === "1" ? "Sarah" : assigneeFilter === "2" ? "Michael" : assigneeFilter === "3" ? "Emily" : "David"}
+                  Assignee: {assigneeFilter === "1" ? "Sarah Chen" : assigneeFilter === "2" ? "Michael Rodriguez" : assigneeFilter === "3" ? "Emily Johnson" : "David Kim"}
                   <button
                     onClick={() => setAssigneeFilter("all")}
                     className="ml-1 text-gray-500 hover:text-gray-700"
@@ -626,15 +747,45 @@ const handleBugClick = (bug) => {
       </div>
 
       {/* Bug Table */}
-<BugTable 
-        searchTerm={searchTerm}
-        statusFilter={statusFilter}
-        priorityFilter={priorityFilter}
-        assigneeFilter={assigneeFilter}
-        severityFilter={severityFilter}
-        dateFilter={dateFilter}
-        onBugClick={handleBugClick}
-      />
+{/* Bug Table */}
+      {isLoading ? (
+        <div className="flex items-center justify-center p-8">
+          <Loading />
+        </div>
+      ) : error ? (
+        <div className="text-center p-8">
+          <div className="text-red-600 mb-4">
+            <ApperIcon name="AlertTriangle" className="h-12 w-12 mx-auto mb-2" />
+            <p className="text-lg font-medium">Failed to load bugs</p>
+            <p className="text-sm text-gray-600">{error}</p>
+          </div>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      ) : (
+        <BugTable 
+          bugs={sortedBugs}
+          users={users}
+          searchTerm={searchTerm}
+          statusFilter={statusFilter}
+          priorityFilter={priorityFilter}
+          assigneeFilter={assigneeFilter}
+          severityFilter={severityFilter}
+          dateFilter={dateFilter}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={(field) => {
+            if (field === sortField) {
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+            } else {
+              setSortField(field);
+              setSortOrder("desc");
+            }
+          }}
+          onBugClick={handleBugClick}
+        />
+      )}
 
       {/* Save Filter Dialog */}
       {showSaveDialog && (

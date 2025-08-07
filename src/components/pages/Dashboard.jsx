@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { bugService } from "@/services/api/bugService";
+import { userService } from "@/services/api/userService";
+import { format, isThisWeek, isToday, isValid } from "date-fns";
+import ApperIcon from "@/components/ApperIcon";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import PriorityBadge from "@/components/molecules/PriorityBadge";
 import MetricCard from "@/components/molecules/MetricCard";
 import Loading from "@/components/ui/Loading";
 import Error from "@/components/ui/Error";
-import ApperIcon from "@/components/ApperIcon";
-import PriorityBadge from "@/components/molecules/PriorityBadge";
-import StatusBadge from "@/components/molecules/StatusBadge";
-import { bugService } from "@/services/api/bugService";
-import { userService } from "@/services/api/userService";
-import { format, isToday, isThisWeek } from "date-fns";
+import Analytics from "@/components/pages/Analytics";
 
 const Dashboard = () => {
   const [bugs, setBugs] = useState([]);
@@ -52,27 +53,35 @@ const Dashboard = () => {
   if (error) return <Error message={error} onRetry={loadData} />;
 
   // Calculate metrics
-  const totalBugs = bugs.length;
-  const openBugs = bugs.filter(bug => bug.status === "Open").length;
-  const criticalBugs = bugs.filter(bug => bug.priority === "Critical").length;
+const totalBugs = bugs.length;
+  const openBugs = bugs.filter(bug => (bug.status_c || bug.status) === "Open").length;
+  const criticalBugs = bugs.filter(bug => (bug.priority_c || bug.priority) === "Critical").length;
   const resolvedThisWeek = bugs.filter(bug => 
-    bug.status === "Resolved" && isThisWeek(new Date(bug.updatedAt))
+    (bug.status_c || bug.status) === "Resolved" && 
+    isThisWeek(new Date(bug.updated_at_c || bug.updatedAt))
   ).length;
-
-  // Recent activity - bugs created or updated recently
+// Recent activity - bugs created or updated recently
   const recentActivity = bugs
-    .filter(bug => 
-      isToday(new Date(bug.createdAt)) || 
-      isToday(new Date(bug.updatedAt))
-    )
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    .filter(bug => {
+      const createdDate = new Date(bug.created_at_c || bug.createdAt);
+      const updatedDate = new Date(bug.updated_at_c || bug.updatedAt);
+      return isToday(createdDate) || isToday(updatedDate);
+    })
+    .sort((a, b) => {
+      const aDate = new Date(a.updated_at_c || a.updatedAt);
+      const bDate = new Date(b.updated_at_c || b.updatedAt);
+      return bDate - aDate;
+    })
     .slice(0, 8);
-
-  const getUserName = (userId) => {
+const getUserName = (userId) => {
     const user = users.find(u => u.Id === parseInt(userId));
-    return user ? user.name : "Unknown User";
+    if (!user) return "Unknown User";
+    
+    // Use database field names for user name
+    const firstName = user.first_name_c || user.Name || "";
+    const lastName = user.last_name_c || "";
+    return firstName && lastName ? `${firstName} ${lastName}` : firstName || user.Name || "Unknown User";
   };
-
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
@@ -131,21 +140,24 @@ const Dashboard = () => {
                   <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
                     <ApperIcon name="Bug" className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="flex-1 min-w-0">
+<div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      #{bug.Id} - {bug.title}
+                      #{bug.Id} - {bug.title_c || bug.Name || bug.title}
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
-                      <StatusBadge status={bug.status} />
-                      <PriorityBadge priority={bug.priority} />
+                      <StatusBadge status={bug.status_c || bug.status} />
+                      <PriorityBadge priority={bug.priority_c || bug.priority} />
                     </div>
                   </div>
-                  <div className="text-right">
+<div className="text-right">
                     <p className="text-xs text-gray-500">
-                      {getUserName(bug.assigneeId)}
+                      {getUserName(bug.assignee_id_c || bug.assigneeId)}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {format(new Date(bug.updatedAt), "MMM dd")}
+                      {(() => {
+                        const date = new Date(bug.updated_at_c || bug.updatedAt);
+                        return isValid(date) ? format(date, "MMM dd") : "N/A";
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -167,10 +179,9 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-4">
-            {["Critical", "High", "Medium", "Low"].map((priority) => {
-              const count = bugs.filter(bug => bug.priority === priority).length;
+{["Critical", "High", "Medium", "Low"].map((priority) => {
+              const count = bugs.filter(bug => (bug.priority_c || bug.priority) === priority).length;
               const percentage = totalBugs > 0 ? Math.round((count / totalBugs) * 100) : 0;
-              
               return (
                 <div key={priority} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
