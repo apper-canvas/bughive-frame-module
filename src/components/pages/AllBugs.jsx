@@ -4,10 +4,233 @@ import ApperIcon from "@/components/ApperIcon";
 import BugTable from "@/components/organisms/BugTable";
 import BugCreateModal from "@/components/organisms/BugCreateModal";
 import BugDetailModal from "@/components/organisms/BugDetailModal";
+import Loading from "@/components/ui/Loading";
 import Badge from "@/components/atoms/Badge";
 import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";
 import Select from "@/components/atoms/Select";
+// Saved Filters Component
+const SavedFilters = () => {
+  const [savedFilters, setSavedFilters] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [filterToDelete, setFilterToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    loadSavedFilters();
+  }, []);
+
+  const loadSavedFilters = async () => {
+    try {
+      const { filterService } = await import('@/services/api/filterService');
+      const filters = await filterService.getAllFilters();
+      setSavedFilters(filters);
+    } catch (error) {
+      console.error('Failed to load saved filters:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const applyFilter = (filter) => {
+    // Dispatch custom event to notify AllBugs component
+    if (typeof window !== 'undefined' && window.CustomEvent && window.dispatchEvent) {
+      try {
+        const event = new window.CustomEvent('applySavedFilter', {
+          detail: { filter }
+        });
+        window.dispatchEvent(event);
+        setShowDropdown(false);
+      } catch (error) {
+        console.error('Failed to dispatch filter event:', error);
+      }
+    }
+  };
+
+  const handleEditFilter = (filter) => {
+    // Dispatch edit event to AllBugs component
+    if (typeof window !== 'undefined' && window.CustomEvent && window.dispatchEvent) {
+      try {
+        const event = new window.CustomEvent('editSavedFilter', {
+          detail: { filter }
+        });
+        window.dispatchEvent(event);
+        setShowDropdown(false);
+      } catch (error) {
+        console.error('Failed to dispatch edit filter event:', error);
+      }
+    }
+  };
+
+  const handleDeleteFilter = async (filter) => {
+    setIsDeleting(true);
+    try {
+      const { filterService } = await import('@/services/api/filterService');
+      await filterService.deleteFilter(filter.Id);
+      
+      // Refresh the filters list
+      await loadSavedFilters();
+      
+      // Show success notification
+      if (typeof window !== 'undefined' && window.CustomEvent && window.dispatchEvent) {
+        try {
+          const event = new window.CustomEvent('showToast', {
+            detail: { 
+              type: 'success', 
+              message: `Filter "${filter.name}" deleted successfully` 
+            }
+          });
+          window.dispatchEvent(event);
+        } catch (error) {
+          console.error('Failed to dispatch success toast:', error);
+        }
+      }
+      setShowDeleteConfirm(false);
+      setFilterToDelete(null);
+    } catch (error) {
+      if (typeof window !== 'undefined' && window.CustomEvent && window.dispatchEvent) {
+        try {
+          const event = new window.CustomEvent('showToast', {
+            detail: { 
+              type: 'error', 
+              message: 'Failed to delete filter' 
+            }
+          });
+          window.dispatchEvent(event);
+        } catch (eventError) {
+          console.error('Failed to dispatch error toast:', eventError);
+        }
+      }
+      console.error('Failed to delete filter:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Button variant="ghost" size="sm" disabled>
+        <ApperIcon name="Loader2" className="animate-spin h-4 w-4 mr-1" />
+        Loading
+      </Button>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setShowDropdown(!showDropdown)}
+        className="flex items-center"
+      >
+        <ApperIcon name="Filter" className="h-4 w-4 mr-1" />
+        Saved ({savedFilters.length})
+        <ApperIcon name="ChevronDown" className="h-4 w-4 ml-1" />
+      </Button>
+
+      {showDropdown && (
+        <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-auto">
+          <div className="p-3">
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Saved Filters</h3>
+            {savedFilters.length === 0 ? (
+              <p className="text-sm text-gray-500 py-4 text-center">No saved filters</p>
+            ) : (
+              <div className="space-y-1">
+                {savedFilters.map((filter) => (
+                  <div key={filter.Id} className="group relative">
+                    <button
+                      onClick={() => applyFilter(filter)}
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg transition-all duration-200 group-hover:pr-16"
+                    >
+                      <ApperIcon 
+                        name={filter.icon} 
+                        className="h-4 w-4 mr-2 text-gray-400 group-hover:text-primary" 
+                      />
+                      <span className="truncate">{filter.name}</span>
+                      {filter.type === 'custom' && (
+                        <ApperIcon 
+                          name="Star" 
+                          className="h-3 w-3 ml-auto text-yellow-500" 
+                        />
+                      )}
+                    </button>
+                    
+                    {/* Edit/Delete buttons for custom filters */}
+                    {filter.type === 'custom' && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center space-x-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditFilter(filter);
+                          }}
+                          className="p-1 text-gray-400 hover:text-blue-600 rounded"
+                          title="Edit filter"
+                        >
+                          <ApperIcon name="Edit" className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFilterToDelete(filter);
+                            setShowDeleteConfirm(true);
+                            setShowDropdown(false);
+                          }}
+                          className="p-1 text-gray-400 hover:text-red-600 rounded"
+                          title="Delete filter"
+                        >
+                          <ApperIcon name="Trash2" className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && filterToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
+            <div className="flex items-center mb-4">
+              <ApperIcon name="AlertTriangle" className="h-6 w-6 text-red-600 mr-3" />
+              <h3 className="text-lg font-medium text-gray-900">Delete Filter</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete the filter "{filterToDelete.name}"? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setFilterToDelete(null);
+                }}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteFilter(filterToDelete)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 flex items-center"
+              >
+                {isDeleting && <ApperIcon name="Loader2" className="animate-spin h-4 w-4 mr-2" />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AllBugs = () => {
 const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -43,14 +266,21 @@ useEffect(() => {
       toast[type](message);
     };
 
+    // Listen for filter refresh events
+    const handleRefreshSavedFilters = () => {
+      // This will be handled by the SavedFilters component
+    };
+
     window.addEventListener('applySavedFilter', handleApplySavedFilter);
     window.addEventListener('editSavedFilter', handleEditSavedFilter);
     window.addEventListener('showToast', handleToastNotification);
+    window.addEventListener('refreshSavedFilters', handleRefreshSavedFilters);
     
     return () => {
       window.removeEventListener('applySavedFilter', handleApplySavedFilter);
       window.removeEventListener('editSavedFilter', handleEditSavedFilter);
       window.removeEventListener('showToast', handleToastNotification);
+      window.removeEventListener('refreshSavedFilters', handleRefreshSavedFilters);
     };
   }, []);
 
@@ -98,7 +328,7 @@ const clearAllFilters = async () => {
     }
   };
 
-  const handleSaveFilter = async () => {
+const handleSaveFilter = async () => {
     if (!saveFilterName.trim()) {
       toast.error("Please enter a name for the filter");
       return;
@@ -156,9 +386,11 @@ setEditFilterName("");
       
       // Trigger sidebar refresh
       if (typeof window !== 'undefined' && window.CustomEvent) {
-        window.dispatchEvent(new CustomEvent('refreshSavedFilters'));
+        window.dispatchEvent(new window.CustomEvent('refreshSavedFilters'));
       }
     } catch (error) {
+      console.error('Failed to update filter:', error);
+      toast.error("Failed to update filter");
     }
   };
 
@@ -205,7 +437,8 @@ const handleBugClick = (bug) => {
                 </Badge>
               )}
             </h3>
-            <div className="flex items-center space-x-2">
+<div className="flex items-center space-x-2">
+              <SavedFilters />
               {activeFilterCount > 0 && (
                 <Button
                   variant="ghost"
