@@ -49,9 +49,15 @@ setLoading(false);
     }
   };
 
-  const isWithinDateRange = (updatedAt, days) => {
+const isWithinDateRange = (updatedAt, days) => {
+    if (!updatedAt) return false;
+    
     const now = new Date();
     const updatedDate = new Date(updatedAt);
+    
+    // Check if the date is valid
+    if (isNaN(updatedDate.getTime())) return false;
+    
     const diffTime = Math.abs(now - updatedDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays <= days;
@@ -124,9 +130,13 @@ const filteredBugs = bugs.filter(bug => {
     let aValue = a[sortField];
     let bValue = b[sortField];
 
-    if (sortField === "createdAt" || sortField === "updatedAt") {
-      aValue = new Date(aValue);
-      bValue = new Date(bValue);
+if (sortField === "createdAt" || sortField === "updatedAt" || sortField === "created_at_c" || sortField === "updated_at_c") {
+      aValue = aValue ? new Date(aValue) : new Date(0);
+      bValue = bValue ? new Date(bValue) : new Date(0);
+      
+      // Handle invalid dates by treating them as very old dates for sorting
+      if (isNaN(aValue.getTime())) aValue = new Date(0);
+      if (isNaN(bValue.getTime())) bValue = new Date(0);
     }
 
     if (typeof aValue === "string") {
@@ -273,9 +283,17 @@ if (loading) return <Loading type="table" />;
                     <span className="text-sm text-gray-900">{getUserName(bug.assigneeId)}</span>
                   </div>
                 </td>
-                <td>
+<td>
                   <span className="text-sm text-gray-500">
-                    {format(new Date(bug.createdAt), "MMM dd, yyyy")}
+                    {(() => {
+                      const dateValue = bug.createdAt || bug.created_at_c;
+                      if (!dateValue) return "N/A";
+                      
+                      const date = new Date(dateValue);
+                      if (isNaN(date.getTime())) return "N/A";
+                      
+                      return format(date, "MMM dd, yyyy");
+                    })()}
                   </span>
                 </td>
                 <td>
