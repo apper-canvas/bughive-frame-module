@@ -500,24 +500,24 @@ return (
                     </div>
                   )}
                   
-                  <div className="flex items-center space-x-2">
+<div className="flex items-center space-x-2">
                     <div className="flex -space-x-1">
                       {teamMembers.slice(0, 3).map((member, index) => (
                         <div
                           key={member.Id}
                           className="h-6 w-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
-                          title={member.name}
+                          title={member?.name || member?.Name || member?.email || 'Unknown User'}
                         >
-                          {member.name.charAt(0)}
+                          {member?.name?.charAt(0) ?? member?.Name?.charAt(0) ?? member?.email?.charAt(0) ?? '?'}
                         </div>
                       ))}
-                      {teamMembers.length > 3 && (
+                      {teamMembers && teamMembers.length > 3 && (
                         <div className="h-6 w-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white">
                           +{teamMembers.length - 3}
                         </div>
                       )}
                     </div>
-                    <span className="text-xs text-gray-500">{teamMembers.length} members</span>
+                    <span className="text-xs text-gray-500">{teamMembers?.length ?? 0} members</span>
                   </div>
                 </div>
 
