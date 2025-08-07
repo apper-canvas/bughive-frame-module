@@ -1,5 +1,5 @@
 [
-  {
+{
     "Id": 1,
     "title": "Login button not responding on mobile devices",
     "description": "The login button becomes unresponsive on mobile devices after entering credentials. Users have to refresh the page multiple times to make it work.",
@@ -11,6 +11,8 @@
     "reporterId": "1",
     "projectId": "1",
     "dueDate": "2024-02-15T00:00:00Z",
+    "estimatedTimeHours": 4.0,
+    "actualTimeHours": null,
     "environment": {
       "browser": "Chrome Mobile 118.0",
       "os": "iOS 17.1",

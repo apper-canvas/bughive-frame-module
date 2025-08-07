@@ -15,7 +15,7 @@ const BugCreateModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     title: "",
     description: "",
     reproductionSteps: "",
@@ -24,6 +24,8 @@ const BugCreateModal = ({ isOpen, onClose }) => {
     assigneeId: "",
     projectId: "",
     dueDate: "",
+    estimatedTimeHours: "",
+    actualTimeHours: "",
     environment: {
       browser: "",
       os: "",
@@ -144,7 +146,7 @@ const BugCreateModal = ({ isOpen, onClose }) => {
       
       toast.success("Bug report created successfully!");
       
-      // Reset form
+// Reset form
       setFormData({
         title: "",
         description: "",
@@ -154,6 +156,8 @@ const BugCreateModal = ({ isOpen, onClose }) => {
         assigneeId: "",
         projectId: "",
         dueDate: "",
+        estimatedTimeHours: "",
+        actualTimeHours: "",
         environment: {
           browser: "",
           os: "",
@@ -281,7 +285,7 @@ const BugCreateModal = ({ isOpen, onClose }) => {
                   <option key={project.Id} value={project.Id}>{project.name}</option>
                 ))}
               </Select>
-            </FormField>
+</FormField>
           </div>
 
           <FormField label="Due Date">
@@ -292,6 +296,35 @@ const BugCreateModal = ({ isOpen, onClose }) => {
               onChange={handleInputChange}
             />
           </FormField>
+
+          {/* Time Tracking */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">Time Tracking</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField label="Estimated Time (Hours)">
+                <Input
+                  type="number"
+                  name="estimatedTimeHours"
+                  value={formData.estimatedTimeHours}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 2.5"
+                  step="0.25"
+                  min="0"
+                />
+              </FormField>
+              <FormField label="Actual Time (Hours)">
+                <Input
+                  type="number"
+                  name="actualTimeHours"
+                  value={formData.actualTimeHours}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 3.0"
+                  step="0.25"
+                  min="0"
+                />
+              </FormField>
+            </div>
+          </div>
 
           {/* Environment Details */}
           <div className="space-y-4">

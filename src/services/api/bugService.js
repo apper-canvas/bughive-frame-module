@@ -31,9 +31,11 @@ class BugService {
     // Find highest existing Id and add 1
     const maxId = this.bugs.reduce((max, bug) => Math.max(max, bug.Id), 0);
     
-    const newBug = {
+const newBug = {
       ...bugData,
       Id: maxId + 1,
+      estimatedTimeHours: bugData.estimatedTimeHours ? parseFloat(bugData.estimatedTimeHours) : null,
+      actualTimeHours: bugData.actualTimeHours ? parseFloat(bugData.actualTimeHours) : null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
