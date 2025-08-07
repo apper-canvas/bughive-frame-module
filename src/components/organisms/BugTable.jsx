@@ -9,7 +9,7 @@ import { bugService } from "@/services/api/bugService";
 import { userService } from "@/services/api/userService";
 import { format } from "date-fns";
 
-const BugTable = () => {
+const BugTable = ({ searchTerm = "" }) => {
   const [bugs, setBugs] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,13 +49,28 @@ const BugTable = () => {
       setSortDirection("asc");
     }
   };
-
-  const getUserName = (userId) => {
+const getUserName = (userId) => {
     const user = users.find(u => u.Id === parseInt(userId));
     return user ? user.name : "Unknown User";
   };
 
-  const sortedBugs = [...bugs].sort((a, b) => {
+  // Filter bugs based on search term
+  const filteredBugs = bugs.filter(bug => {
+    if (!searchTerm.trim()) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const assigneeName = getUserName(bug.assigneeId).toLowerCase();
+    const reporterName = getUserName(bug.reporterId).toLowerCase();
+    
+    return (
+      bug.title.toLowerCase().includes(searchLower) ||
+      bug.description.toLowerCase().includes(searchLower) ||
+      assigneeName.includes(searchLower) ||
+      reporterName.includes(searchLower)
+    );
+  });
+
+  const sortedBugs = [...filteredBugs].sort((a, b) => {
     let aValue = a[sortField];
     let bValue = b[sortField];
 
@@ -79,12 +94,22 @@ const BugTable = () => {
   if (loading) return <Loading type="table" />;
   if (error) return <Error message={error} onRetry={loadData} />;
 
-  if (bugs.length === 0) {
+if (bugs.length === 0) {
     return (
       <Empty
         title="No bugs found"
         description="No bug reports have been created yet. Create your first bug report to get started."
         icon="Bug"
+      />
+    );
+  }
+
+  if (filteredBugs.length === 0 && searchTerm.trim()) {
+    return (
+      <Empty
+        title="No matching bugs found"
+        description={`No bugs match your search for "${searchTerm}". Try adjusting your search terms.`}
+        icon="Search"
       />
     );
   }

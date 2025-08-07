@@ -91,6 +91,22 @@ class BugService {
     await this.delay();
     return this.bugs.filter(bug => bug.priority === priority);
   }
+async search(searchTerm) {
+    await this.delay();
+    
+    if (!searchTerm || !searchTerm.trim()) {
+      return [...this.bugs];
+    }
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    return this.bugs.filter(bug => 
+      bug.title.toLowerCase().includes(searchLower) ||
+      bug.description.toLowerCase().includes(searchLower) ||
+      bug.assigneeId.toString().includes(searchLower) ||
+      bug.reporterId.toString().includes(searchLower)
+    );
+  }
 }
 
 export const bugService = new BugService();

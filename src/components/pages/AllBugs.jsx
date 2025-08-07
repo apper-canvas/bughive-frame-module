@@ -129,8 +129,26 @@ const AllBugs = () => {
         )}
       </div>
 
+{/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Input
+            type="text"
+            placeholder="Search bugs by title, description, assignee, or reporter..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          <ApperIcon 
+            name="Search" 
+            size={20} 
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          />
+        </div>
+      </div>
+
       {/* Bug Table */}
-      <BugTable />
+      <BugTable searchTerm={searchTerm} />
 
       {/* Create Bug Modal */}
       <BugCreateModal
