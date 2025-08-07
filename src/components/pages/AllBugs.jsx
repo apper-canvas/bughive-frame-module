@@ -6,10 +6,12 @@ import Select from "@/components/atoms/Select";
 import Badge from "@/components/atoms/Badge";
 import BugTable from "@/components/organisms/BugTable";
 import BugCreateModal from "@/components/organisms/BugCreateModal";
+import BugDetailModal from "@/components/organisms/BugDetailModal";
 import { toast } from 'react-toastify';
-
 const AllBugs = () => {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedBug, setSelectedBug] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -18,7 +20,6 @@ const AllBugs = () => {
   const [dateFilter, setDateFilter] = useState("all");
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveFilterName, setSaveFilterName] = useState("");
-
   // Listen for saved filter applications from sidebar
   useEffect(() => {
     const handleApplySavedFilter = (event) => {
@@ -100,7 +101,17 @@ const clearAllFilters = async () => {
   };
 
   const activeFilterCount = getActiveFilterCount();
-return (
+const handleBugClick = (bug) => {
+    setSelectedBug(bug);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleBugUpdate = (updatedBug) => {
+    // Handle bug update if needed
+    toast.success('Bug updated successfully');
+  };
+
+  return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -320,13 +331,14 @@ return (
       </div>
 
       {/* Bug Table */}
-      <BugTable 
+<BugTable 
         searchTerm={searchTerm}
         statusFilter={statusFilter}
         priorityFilter={priorityFilter}
         assigneeFilter={assigneeFilter}
         severityFilter={severityFilter}
         dateFilter={dateFilter}
+        onBugClick={handleBugClick}
       />
 
       {/* Save Filter Dialog */}
@@ -365,10 +377,21 @@ return (
         </div>
       )}
 
-      {/* Create Bug Modal */}
+{/* Create Bug Modal */}
       <BugCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+      />
+
+      {/* Bug Detail Modal */}
+      <BugDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedBug(null);
+        }}
+        bugId={selectedBug?.Id}
+        onBugUpdate={handleBugUpdate}
       />
     </div>
   );

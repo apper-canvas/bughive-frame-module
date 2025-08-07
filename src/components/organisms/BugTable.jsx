@@ -8,7 +8,6 @@ import PriorityBadge from "@/components/molecules/PriorityBadge";
 import Loading from "@/components/ui/Loading";
 import Error from "@/components/ui/Error";
 import Empty from "@/components/ui/Empty";
-import Reports from "@/components/pages/Reports";
 
 const BugTable = ({ 
   searchTerm = "",
@@ -16,7 +15,8 @@ const BugTable = ({
   priorityFilter = "all",
   assigneeFilter = "all",
   severityFilter = "all",
-  dateFilter = "all"
+  dateFilter = "all",
+  onBugClick
 }) => {
   const [bugs, setBugs] = useState([]);
   const [users, setUsers] = useState([]);
@@ -245,7 +245,11 @@ if (loading) return <Loading type="table" />;
           </thead>
           <tbody>
             {sortedBugs.map((bug) => (
-              <tr key={bug.Id} className="hover:bg-gray-50 transition-colors duration-200">
+<tr 
+                key={bug.Id} 
+                className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                onClick={() => onBugClick?.(bug)}
+              >
                 <td>
                   <span className="font-mono text-sm font-medium">#{bug.Id}</span>
                 </td>
@@ -276,10 +280,22 @@ if (loading) return <Loading type="table" />;
                 </td>
                 <td>
                   <div className="flex items-center space-x-2">
-                    <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors duration-200">
+                    <button 
+                      className="p-1 text-gray-400 hover:text-blue-600 transition-colors duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onBugClick?.(bug);
+                      }}
+                    >
                       <ApperIcon name="Eye" className="h-4 w-4" />
                     </button>
-                    <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <button 
+                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onBugClick?.(bug);
+                      }}
+                    >
                       <ApperIcon name="Edit" className="h-4 w-4" />
                     </button>
                   </div>
