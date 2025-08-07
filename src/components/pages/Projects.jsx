@@ -390,216 +390,217 @@ if (projects.length === 0) {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-          <p className="text-gray-600 mt-2">
-            Manage {projects.length} active projects and track their bug resolution progress
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0 flex items-center space-x-3">
-<Button variant="secondary" icon="Download">
-            Export
-          </Button>
-          <Button 
-            icon="Plus"
-            onClick={() => setShowCreateModal(true)}
-          >
-            New Project
-          </Button>
-        </div>
-      </div>
-
-      {/* Project Statistics */}
-<div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total Projects"
-          value={projects.length}
-          icon="FolderOpen"
-          className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
-        />
-        
-        <MetricCard
-          title="Active Projects"
-          value={projects.filter(p => p.status === "Active").length}
-          icon="Play"
-          className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
-        />
-        
-        <MetricCard
-          title="Total Bugs"
-          value={bugs.length}
-          icon="Bug"
-          className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
-        />
-        
-        <MetricCard
-          title="Avg Resolution"
-          value="7.2 days"
-          icon="TrendingUp"
-          className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200"
-        />
-      </div>
-
-      {/* Projects Grid */}
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => {
-          const stats = getProjectStats(project.Id);
-          const lead = getProjectLead(project.leadId);
-          const teamMembers = getProjectTeamMembers(project.Id);
-          
-          return (
-            <div 
-              key={project.Id} 
-              className="card hover:shadow-lg transition-all duration-300 group cursor-pointer"
-              onClick={() => handleProjectClick(project.Id)}
+return (
+    <>
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+            <p className="text-gray-600 mt-2">
+              Manage {projects.length} active projects and track their bug resolution progress
+            </p>
+          </div>
+          <div className="mt-4 sm:mt-0 flex items-center space-x-3">
+            <Button variant="secondary" icon="Download">
+              Export
+            </Button>
+            <Button 
+              icon="Plus"
+              onClick={() => setShowCreateModal(true)}
             >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors duration-200">
-                    {project.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                    {project.description}
-                  </p>
+              New Project
+            </Button>
+          </div>
+        </div>
+
+        {/* Project Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <MetricCard
+            title="Total Projects"
+            value={projects.length}
+            icon="FolderOpen"
+            className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
+          />
+          
+          <MetricCard
+            title="Active Projects"
+            value={projects.filter(p => p.status === "Active").length}
+            icon="Play"
+            className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+          />
+          
+          <MetricCard
+            title="Total Bugs"
+            value={bugs.length}
+            icon="Bug"
+            className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
+          />
+          
+          <MetricCard
+            title="Avg Resolution"
+            value="7.2 days"
+            icon="TrendingUp"
+            className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200"
+          />
+        </div>
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project) => {
+            const stats = getProjectStats(project.Id);
+            const lead = getProjectLead(project.leadId);
+            const teamMembers = getProjectTeamMembers(project.Id);
+            
+            return (
+              <div 
+                key={project.Id} 
+                className="card hover:shadow-lg transition-all duration-300 group cursor-pointer"
+                onClick={() => handleProjectClick(project.Id)}
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors duration-200">
+                      {project.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                      {project.description}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2 ml-3">
+                    <Badge 
+                      variant={project.status === "Active" ? "success" : 
+                              project.status === "Planning" ? "warning" : "default"}
+                    >
+                      {project.status}
+                    </Badge>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteProject(project.Id, project.name);
+                      }}
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <ApperIcon name="Trash2" size={14} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2 ml-3">
-                  <Badge 
-                    variant={project.status === "Active" ? "success" : 
-                            project.status === "Planning" ? "warning" : "default"}
-                  >
-                    {project.status}
-                  </Badge>
-                  <button
+
+                {/* Project Lead & Team */}
+                <div className="space-y-3 mb-4">
+                  {lead && (
+                    <div className="flex items-center space-x-2">
+                      <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center">
+                        <ApperIcon name="Crown" className="h-3 w-3 text-primary" />
+                      </div>
+                      <span className="text-sm text-gray-600">
+                        Led by <span className="font-medium text-gray-900">{lead.name}</span>
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center space-x-2">
+                    <div className="flex -space-x-1">
+                      {teamMembers.slice(0, 3).map((member, index) => (
+                        <div
+                          key={member.Id}
+                          className="h-6 w-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                          title={member.name}
+                        >
+                          {member.name.charAt(0)}
+                        </div>
+                      ))}
+                      {teamMembers.length > 3 && (
+                        <div className="h-6 w-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white">
+                          +{teamMembers.length - 3}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500">{teamMembers.length} members</span>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Completion</span>
+                    <span className="font-medium text-gray-900">{stats.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-primary to-blue-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${stats.progress}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Statistics Grid */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-lg font-bold text-gray-900">{stats.total}</p>
+                    <p className="text-xs text-gray-500">Total Issues</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-3 text-center">
+                    <p className="text-lg font-bold text-green-600">{stats.resolved}</p>
+                    <p className="text-xs text-gray-500">Resolved</p>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <p className="text-lg font-bold text-blue-600">{stats.open}</p>
+                    <p className="text-xs text-gray-500">Open</p>
+                  </div>
+                  <div className="bg-red-50 rounded-lg p-3 text-center">
+                    <p className="text-lg font-bold text-red-600">{stats.critical}</p>
+                    <p className="text-xs text-gray-500">Critical</p>
+                  </div>
+                </div>
+
+                {/* Footer Info */}
+                <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-200">
+                  <span>Created {formatDate(project.createdAt)}</span>
+                  <div className="flex items-center space-x-1">
+                    <ApperIcon name="Clock" className="h-3 w-3" />
+                    <span>Avg: {stats.avgResolutionTime}d</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons - Only visible on hover */}
+                <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDeleteProject(project.Id, project.name);
+                      handleProjectClick(project.Id);
                     }}
-                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    className="flex items-center space-x-1 text-xs text-primary hover:text-primary/80 font-medium"
                   >
-                    <ApperIcon name="Trash2" size={14} />
+                    <ApperIcon name="ArrowRight" className="h-3 w-3" />
+                    <span>View Details</span>
                   </button>
-                </div>
-              </div>
-
-              {/* Project Lead & Team */}
-              <div className="space-y-3 mb-4">
-                {lead && (
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center">
-                      <ApperIcon name="Crown" className="h-3 w-3 text-primary" />
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      Led by <span className="font-medium text-gray-900">{lead.name}</span>
-                    </span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toast.info(`Opening settings for ${project.name}...`);
+                    }}
+                    className="flex items-center space-x-1 text-xs text-gray-600 hover:text-primary font-medium"
+                  >
+                    <ApperIcon name="Settings" className="h-3 w-3" />
+                    <span>Settings</span>
+                  </button>
                   </div>
-                )}
-                
-                <div className="flex items-center space-x-2">
-                  <div className="flex -space-x-1">
-                    {teamMembers.slice(0, 3).map((member, index) => (
-                      <div
-                        key={member.Id}
-                        className="h-6 w-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
-                        title={member.name}
-                      >
-                        {member.name.charAt(0)}
-                      </div>
-                    ))}
-                    {teamMembers.length > 3 && (
-                      <div className="h-6 w-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white">
-                        +{teamMembers.length - 3}
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-xs text-gray-500">{teamMembers.length} members</span>
                 </div>
-              </div>
+              );
+            })}
+          </div>
+        </div>
 
-              {/* Progress Bar */}
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Completion</span>
-                  <span className="font-medium text-gray-900">{stats.progress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-primary to-blue-600 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${stats.progress}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Statistics Grid */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-gray-50 rounded-lg p-3 text-center">
-                  <p className="text-lg font-bold text-gray-900">{stats.total}</p>
-                  <p className="text-xs text-gray-500">Total Issues</p>
-                </div>
-                <div className="bg-green-50 rounded-lg p-3 text-center">
-                  <p className="text-lg font-bold text-green-600">{stats.resolved}</p>
-                  <p className="text-xs text-gray-500">Resolved</p>
-                </div>
-                <div className="bg-blue-50 rounded-lg p-3 text-center">
-                  <p className="text-lg font-bold text-blue-600">{stats.open}</p>
-                  <p className="text-xs text-gray-500">Open</p>
-                </div>
-                <div className="bg-red-50 rounded-lg p-3 text-center">
-                  <p className="text-lg font-bold text-red-600">{stats.critical}</p>
-                  <p className="text-xs text-gray-500">Critical</p>
-                </div>
-              </div>
-
-              {/* Footer Info */}
-              <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-200">
-                <span>Created {formatDate(project.createdAt)}</span>
-                <div className="flex items-center space-x-1">
-                  <ApperIcon name="Clock" className="h-3 w-3" />
-                  <span>Avg: {stats.avgResolutionTime}d</span>
-                </div>
-              </div>
-
-              {/* Action Buttons - Only visible on hover */}
-              <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleProjectClick(project.Id);
-                  }}
-                  className="flex items-center space-x-1 text-xs text-primary hover:text-primary/80 font-medium"
-                >
-                  <ApperIcon name="ArrowRight" className="h-3 w-3" />
-                  <span>View Details</span>
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toast.info(`Opening settings for ${project.name}...`);
-                  }}
-                  className="flex items-center space-x-1 text-xs text-gray-600 hover:text-primary font-medium"
-                >
-                  <ApperIcon name="Settings" className="h-3 w-3" />
-                  <span>Settings</span>
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-</div>
-
-      <ProjectCreateModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onProjectCreated={loadData}
-        users={users}
-      />
-    </div>
-  );
+        <ProjectCreateModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onProjectCreated={loadData}
+          users={users}
+        />
+      </>
+    );
 };
 
 export default Projects;
