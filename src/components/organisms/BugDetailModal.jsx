@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { format, formatDistanceToNow } from 'date-fns';
-import ApperIcon from '@/components/ApperIcon';
-import Button from '@/components/atoms/Button';
-import Input from '@/components/atoms/Input';
-import Textarea from '@/components/atoms/Textarea';
-import Select from '@/components/atoms/Select';
-import StatusBadge from '@/components/molecules/StatusBadge';
-import PriorityBadge from '@/components/molecules/PriorityBadge';
-import { bugService } from '@/services/api/bugService';
-import { userService } from '@/services/api/userService';
-import { toast } from 'react-toastify';
-import { cn } from '@/utils/cn';
+import React, { useEffect, useState } from "react";
+import { format, formatDistanceToNow, isValid } from "date-fns";
+import { bugService } from "@/services/api/bugService";
+import { userService } from "@/services/api/userService";
+import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import PriorityBadge from "@/components/molecules/PriorityBadge";
+import Textarea from "@/components/atoms/Textarea";
+import Input from "@/components/atoms/Input";
+import Button from "@/components/atoms/Button";
+import Select from "@/components/atoms/Select";
+import { cn } from "@/utils/cn";
 
 const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
   const [bug, setBug] = useState(null);
@@ -439,14 +439,20 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block">Created</label>
-                    <p className="text-sm text-gray-600">
-                      {format(new Date(bug.createdAt), 'MMM dd, yyyy HH:mm')}
+<p className="text-sm text-gray-600">
+                      {bug.createdAt && isValid(new Date(bug.createdAt)) 
+                        ? format(new Date(bug.createdAt), 'MMM dd, yyyy HH:mm')
+                        : 'Invalid date'
+                      }
                     </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block">Last Updated</label>
-                    <p className="text-sm text-gray-600">
-                      {format(new Date(bug.updatedAt), 'MMM dd, yyyy HH:mm')}
+<p className="text-sm text-gray-600">
+                      {bug.updatedAt && isValid(new Date(bug.updatedAt)) 
+                        ? format(new Date(bug.updatedAt), 'MMM dd, yyyy HH:mm')
+                        : 'Invalid date'
+                      }
                     </p>
                   </div>
                 </div>
@@ -505,8 +511,11 @@ const BugDetailModal = ({ isOpen, onClose, bugId, onBugUpdate }) => {
                             {renderActivityIcon(activity.type)}
                             <span className="capitalize">{activity.type.replace('_', ' ')}</span>
                           </div>
-                          <span className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+<span className="text-xs text-gray-500">
+                            {activity.timestamp && isValid(new Date(activity.timestamp))
+                              ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })
+                              : 'Unknown'
+                            }
                           </span>
                         </div>
                         <div className="mt-1">
