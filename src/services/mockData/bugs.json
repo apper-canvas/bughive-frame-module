@@ -1,0 +1,212 @@
+[
+  {
+    "Id": 1,
+    "title": "Login button not responding on mobile devices",
+    "description": "The login button becomes unresponsive on mobile devices after entering credentials. Users have to refresh the page multiple times to make it work.",
+    "reproductionSteps": "1. Open app on mobile device\n2. Navigate to login page\n3. Enter valid credentials\n4. Click login button\n5. Notice button doesn't respond",
+    "priority": "Critical",
+    "severity": "Major",
+    "status": "Open",
+    "assigneeId": "3",
+    "reporterId": "1",
+    "projectId": "1",
+    "dueDate": "2024-02-15T00:00:00Z",
+    "environment": {
+      "browser": "Chrome Mobile 118.0",
+      "os": "iOS 17.1",
+      "device": "iPhone 14"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T14:22:00Z"
+  },
+  {
+    "Id": 2,
+    "title": "Dashboard loading time exceeds 10 seconds",
+    "description": "The main dashboard takes an unusually long time to load, significantly impacting user experience and productivity.",
+    "reproductionSteps": "1. Log into the application\n2. Navigate to main dashboard\n3. Observe loading time\n4. Compare with expected performance",
+    "priority": "High",
+    "severity": "Medium",
+    "status": "In Progress",
+    "assigneeId": "2",
+    "reporterId": "4",
+    "projectId": "1",
+    "dueDate": "2024-02-20T00:00:00Z",
+    "environment": {
+      "browser": "Firefox 120.0",
+      "os": "Windows 11",
+      "device": "Desktop"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-12T09:15:00Z",
+    "updatedAt": "2024-01-16T11:45:00Z"
+  },
+  {
+    "Id": 3,
+    "title": "User profile image upload fails with large files",
+    "description": "Profile image upload functionality fails when users attempt to upload images larger than 2MB, showing unclear error messages.",
+    "reproductionSteps": "1. Go to user profile settings\n2. Click on change profile picture\n3. Select an image larger than 2MB\n4. Attempt to upload\n5. Observe error message",
+    "priority": "Medium",
+    "severity": "Medium",
+    "status": "Open",
+    "assigneeId": "1",
+    "reporterId": "3",
+    "projectId": "2",
+    "dueDate": "2024-02-25T00:00:00Z",
+    "environment": {
+      "browser": "Safari 17.1",
+      "os": "macOS Sonoma",
+      "device": "MacBook Pro"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-10T16:20:00Z",
+    "updatedAt": "2024-01-10T16:20:00Z"
+  },
+  {
+    "Id": 4,
+    "title": "Search functionality returns incorrect results",
+    "description": "The search feature is returning irrelevant results and missing exact matches, making it difficult for users to find what they're looking for.",
+    "reproductionSteps": "1. Navigate to search page\n2. Enter a specific search term\n3. Review search results\n4. Verify if results match search criteria",
+    "priority": "High",
+    "severity": "Major",
+    "status": "Resolved",
+    "assigneeId": "4",
+    "reporterId": "2",
+    "projectId": "1",
+    "dueDate": "2024-02-18T00:00:00Z",
+    "environment": {
+      "browser": "Chrome 119.0",
+      "os": "Windows 10",
+      "device": "Desktop"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-08T13:45:00Z",
+    "updatedAt": "2024-01-14T09:30:00Z"
+  },
+  {
+    "Id": 5,
+    "title": "Email notifications not being sent to users",
+    "description": "System is failing to send email notifications for important events like password resets, account activations, and security alerts.",
+    "reproductionSteps": "1. Trigger an action that should send email\n2. Check user's email inbox\n3. Verify notification preferences\n4. Check spam/junk folders",
+    "priority": "Critical",
+    "severity": "Critical",
+    "status": "Open",
+    "assigneeId": "2",
+    "reporterId": "1",
+    "projectId": "3",
+    "dueDate": "2024-02-12T00:00:00Z",
+    "environment": {
+      "browser": "N/A",
+      "os": "Server Side",
+      "device": "Email Service"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-14T08:00:00Z",
+    "updatedAt": "2024-01-14T12:15:00Z"
+  },
+  {
+    "Id": 6,
+    "title": "Data export feature generates corrupted CSV files",
+    "description": "When users export data to CSV format, the resulting files are corrupted and cannot be opened properly in Excel or other spreadsheet applications.",
+    "reproductionSteps": "1. Navigate to data export section\n2. Select CSV format\n3. Choose data range\n4. Click export\n5. Attempt to open downloaded file",
+    "priority": "Medium",
+    "severity": "Medium",
+    "status": "In Progress",
+    "assigneeId": "3",
+    "reporterId": "4",
+    "projectId": "2",
+    "dueDate": "2024-02-28T00:00:00Z",
+    "environment": {
+      "browser": "Edge 119.0",
+      "os": "Windows 11",
+      "device": "Desktop"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-11T14:30:00Z",
+    "updatedAt": "2024-01-15T10:20:00Z"
+  },
+  {
+    "Id": 7,
+    "title": "Navigation menu overlaps with content on tablet devices",
+    "description": "On tablet devices in landscape mode, the navigation menu overlaps with the main content area, making it impossible to interact with certain elements.",
+    "reproductionSteps": "1. Access app on tablet device\n2. Rotate to landscape mode\n3. Open navigation menu\n4. Notice overlap with main content",
+    "priority": "Low",
+    "severity": "Minor",
+    "status": "Open",
+    "assigneeId": "1",
+    "reporterId": "3",
+    "projectId": "1",
+    "dueDate": "2024-03-05T00:00:00Z",
+    "environment": {
+      "browser": "Chrome 118.0",
+      "os": "Android 13",
+      "device": "Samsung Galaxy Tab"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-13T11:10:00Z",
+    "updatedAt": "2024-01-13T11:10:00Z"
+  },
+  {
+    "Id": 8,
+    "title": "Form validation messages not displaying correctly",
+    "description": "Error messages for form validation are not appearing consistently, leaving users confused about what fields need to be corrected.",
+    "reproductionSteps": "1. Navigate to any form in the application\n2. Leave required fields empty\n3. Submit the form\n4. Observe validation message display",
+    "priority": "Medium",
+    "severity": "Medium",
+    "status": "Closed",
+    "assigneeId": "4",
+    "reporterId": "2",
+    "projectId": "2",
+    "dueDate": "2024-02-22T00:00:00Z",
+    "environment": {
+      "browser": "Firefox 119.0",
+      "os": "Ubuntu 22.04",
+      "device": "Desktop"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-09T15:45:00Z",
+    "updatedAt": "2024-01-12T16:30:00Z"
+  },
+  {
+    "Id": 9,
+    "title": "API timeout errors during peak usage hours",
+    "description": "Users experience frequent API timeout errors between 9 AM - 11 AM and 2 PM - 4 PM, coinciding with peak usage periods.",
+    "reproductionSteps": "1. Use application during peak hours (9-11 AM or 2-4 PM)\n2. Perform actions that require API calls\n3. Monitor for timeout errors\n4. Document frequency and patterns",
+    "priority": "High",
+    "severity": "Major",
+    "status": "Open",
+    "assigneeId": "2",
+    "reporterId": "1",
+    "projectId": "3",
+    "dueDate": "2024-02-16T00:00:00Z",
+    "environment": {
+      "browser": "Various",
+      "os": "Various",
+      "device": "Backend Service"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-16T07:30:00Z",
+    "updatedAt": "2024-01-16T13:45:00Z"
+  },
+  {
+    "Id": 10,
+    "title": "Print functionality cuts off content on certain pages",
+    "description": "When users attempt to print reports or documents, content gets cut off at page boundaries, making printed copies incomplete and unusable.",
+    "reproductionSteps": "1. Navigate to a report or document page\n2. Click print or use Ctrl+P\n3. Preview the print layout\n4. Observe content cutoff issues",
+    "priority": "Low",
+    "severity": "Minor",
+    "status": "Resolved",
+    "assigneeId": "3",
+    "reporterId": "4",
+    "projectId": "1",
+    "dueDate": "2024-03-01T00:00:00Z",
+    "environment": {
+      "browser": "Chrome 119.0",
+      "os": "Windows 10",
+      "device": "Desktop"
+    },
+    "attachments": [],
+    "createdAt": "2024-01-07T12:20:00Z",
+    "updatedAt": "2024-01-13T14:10:00Z"
+  }
+]
