@@ -101,18 +101,30 @@ const Sidebar = ({ isOpen, onToggle }) => {
             })}
           </nav>
 
-          {/* User Profile */}
+{/* User Profile */}
           <div className="px-4 py-4 border-t border-gray-200">
-            <div className="flex items-center px-4 py-2">
-              <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center">
-                <ApperIcon name="User" className="h-4 w-4 text-white" />
+            <div className="flex items-center justify-between px-4 py-2">
+              <div className="flex items-center">
+                <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center">
+                  <ApperIcon name="User" className="h-4 w-4 text-white" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">QA Team</p>
+                  <p className="text-xs text-gray-500">Administrator</p>
+                </div>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">QA Team</p>
-                <p className="text-xs text-gray-500">Administrator</p>
-              </div>
+              <button
+                onClick={() => {
+                  const { logout } = React.useContext(require('../../App').AuthContext);
+                  logout();
+                }}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                title="Logout"
+              >
+                <ApperIcon name="LogOut" className="h-4 w-4" />
+              </button>
             </div>
-</div>
+          </div>
         </div>
       </div>
     </div>

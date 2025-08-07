@@ -1,7 +1,8 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import ApperIcon from "@/components/ApperIcon";
-import Button from "@/components/atoms/Button";
 import BugCreateModal from "@/components/organisms/BugCreateModal";
+import Dashboard from "@/components/pages/Dashboard";
+import Button from "@/components/atoms/Button";
 
 const Header = ({ onMenuClick }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -51,8 +52,19 @@ const Header = ({ onMenuClick }) => {
               </button>
             </div>
             
-            <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center">
-              <ApperIcon name="User" className="h-4 w-4 text-white" />
+<div className="flex items-center space-x-3">
+              <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center">
+                <ApperIcon name="User" className="h-4 w-4 text-white" />
+              </div>
+              <button
+                onClick={() => {
+                  const { logout } = React.useContext(require('../../App').AuthContext);
+                  logout();
+                }}
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
