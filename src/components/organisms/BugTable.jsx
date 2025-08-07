@@ -1,15 +1,23 @@
-import { useState, useEffect } from "react";
-import ApperIcon from "@/components/ApperIcon";
-import PriorityBadge from "@/components/molecules/PriorityBadge";
-import StatusBadge from "@/components/molecules/StatusBadge";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
-import Empty from "@/components/ui/Empty";
+import React, { useEffect, useState } from "react";
 import { bugService } from "@/services/api/bugService";
 import { userService } from "@/services/api/userService";
 import { format } from "date-fns";
+import ApperIcon from "@/components/ApperIcon";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import PriorityBadge from "@/components/molecules/PriorityBadge";
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
+import Empty from "@/components/ui/Empty";
+import Reports from "@/components/pages/Reports";
 
-const BugTable = ({ searchTerm = "" }) => {
+const BugTable = ({ 
+  searchTerm = "",
+  statusFilter = "all",
+  priorityFilter = "all",
+  assigneeFilter = "all",
+  severityFilter = "all",
+  dateFilter = "all"
+}) => {
   const [bugs, setBugs] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,9 +25,9 @@ const BugTable = ({ searchTerm = "" }) => {
   const [sortField, setSortField] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState("desc");
 
-  useEffect(() => {
+useEffect(() => {
     loadData();
-  }, []);
+  }, [searchTerm, statusFilter, priorityFilter, assigneeFilter, severityFilter, dateFilter]);
 
   const loadData = async () => {
     try {
@@ -37,8 +45,16 @@ const BugTable = ({ searchTerm = "" }) => {
       setError("Failed to load bug data. Please try again.");
       console.error("Error loading data:", err);
     } finally {
-      setLoading(false);
+setLoading(false);
     }
+  };
+
+  const isWithinDateRange = (updatedAt, days) => {
+    const now = new Date();
+    const updatedDate = new Date(updatedAt);
+    const diffTime = Math.abs(now - updatedDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= days;
   };
 
   const handleSort = (field) => {
@@ -55,19 +71,53 @@ const getUserName = (userId) => {
   };
 
   // Filter bugs based on search term
-  const filteredBugs = bugs.filter(bug => {
-    if (!searchTerm.trim()) return true;
-    
-    const searchLower = searchTerm.toLowerCase();
-    const assigneeName = getUserName(bug.assigneeId).toLowerCase();
-    const reporterName = getUserName(bug.reporterId).toLowerCase();
-    
-    return (
-      bug.title.toLowerCase().includes(searchLower) ||
-      bug.description.toLowerCase().includes(searchLower) ||
-      assigneeName.includes(searchLower) ||
-      reporterName.includes(searchLower)
-    );
+const filteredBugs = bugs.filter(bug => {
+    // Search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      const assigneeName = getUserName(bug.assigneeId).toLowerCase();
+      const reporterName = getUserName(bug.reporterId).toLowerCase();
+      
+      const matchesSearch = (
+        bug.title.toLowerCase().includes(searchLower) ||
+        bug.description.toLowerCase().includes(searchLower) ||
+        assigneeName.includes(searchLower) ||
+        reporterName.includes(searchLower) ||
+        bug.Id.toString().includes(searchLower)
+      );
+      
+      if (!matchesSearch) return false;
+    }
+
+    // Status filter
+    if (statusFilter !== "all" && bug.status !== statusFilter) {
+      return false;
+    }
+
+    // Priority filter
+    if (priorityFilter !== "all" && bug.priority !== priorityFilter) {
+      return false;
+    }
+
+    // Assignee filter
+    if (assigneeFilter !== "all" && bug.assigneeId !== assigneeFilter) {
+      return false;
+    }
+
+    // Severity filter
+    if (severityFilter !== "all" && bug.severity !== severityFilter) {
+      return false;
+    }
+
+    // Date filter
+    if (dateFilter !== "all") {
+      const days = parseInt(dateFilter);
+      if (!isWithinDateRange(bug.updatedAt, days)) {
+        return false;
+      }
+    }
+
+    return true;
   });
 
   const sortedBugs = [...filteredBugs].sort((a, b) => {
@@ -91,10 +141,13 @@ const getUserName = (userId) => {
     }
   });
 
-  if (loading) return <Loading type="table" />;
+  const totalBugs = bugs.length;
+  const filteredCount = filteredBugs.length;
+
+if (loading) return <Loading type="table" />;
   if (error) return <Error message={error} onRetry={loadData} />;
 
-if (bugs.length === 0) {
+  if (bugs.length === 0) {
     return (
       <Empty
         title="No bugs found"
@@ -121,7 +174,23 @@ if (bugs.length === 0) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
+      {/* Results Header */}
+      <div className="flex items-center justify-between mb-4 p-4">
+        <div className="flex items-center space-x-4">
+          <h3 className="text-lg font-medium text-gray-900">Bug Reports</h3>
+          <div className="text-sm text-gray-600">
+            Showing {filteredCount} of {totalBugs} bugs
+          </div>
+        </div>
+        <div className="text-sm text-gray-500">
+          {filteredCount !== totalBugs && (
+            <span className="text-primary font-medium">
+              {totalBugs - filteredCount} bugs filtered out
+            </span>
+          )}
+        </div>
+      </div>
+<div className="overflow-x-auto">
         <table className="bug-table">
           <thead>
             <tr>
