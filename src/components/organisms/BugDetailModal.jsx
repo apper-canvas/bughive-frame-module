@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { format, formatDistanceToNow, isValid } from "date-fns";
 import { bugService } from "@/services/api/bugService";
 import { userService } from "@/services/api/userService";
+import { notificationService } from "@/services/api/notificationService";
 import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
 import StatusBadge from "@/components/molecules/StatusBadge";
@@ -164,21 +165,30 @@ try {
   };
 
 const handleStatusChange = async (newStatus) => {
-    if (!bug || newStatus === bug.status) return;
+    if (!bug || newStatus === bug.status_c) return;
 
     try {
+      const oldStatus = bug.status_c;
+      
       const updatedBug = await bugService.update(bug.Id, { 
         status_c: newStatus,
         updated_at_c: new Date().toISOString()
       });
       setBug(updatedBug);
       
+      // Create notification for status change
+      await notificationService.create({
+        bug_id_c: bug.Id,
+        old_status_c: oldStatus,
+        new_status_c: newStatus
+      });
+      
       const newActivity = {
         id: Date.now(),
         type: 'status_change',
         userId: '1',
         timestamp: new Date().toISOString(),
-        data: { from: bug.status, to: newStatus }
+        data: { from: oldStatus, to: newStatus }
       };
       setActivities(prev => [newActivity, ...prev]);
       
