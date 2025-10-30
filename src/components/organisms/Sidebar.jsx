@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { AuthContext } from "../../App";
+import { useAuth } from "@/layouts/Root";
 import ApperIcon from "@/components/ApperIcon";
 import { cn } from "@/utils/cn";
 const Sidebar = ({ isOpen, onToggle }) => {
@@ -41,7 +41,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
 
 // Desktop sidebar
   const DesktopSidebar = () => {
-    const { logout } = useContext(AuthContext);
+const { logout } = useAuth();
     
     return (
       <div className="hidden lg:flex lg:flex-shrink-0">

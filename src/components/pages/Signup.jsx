@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useContext } from 'react';
-import { AuthContext } from '../../App';
-
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/layouts/Root";
+import { useSelector } from "react-redux";
 function Signup() {
-  const { isInitialized } = useContext(AuthContext);
-  
+const { isInitialized } = useAuth();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.user);
   useEffect(() => {
     if (isInitialized) {
       const { ApperUI } = window.ApperSDK;
